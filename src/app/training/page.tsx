@@ -6,6 +6,7 @@ import { siteConfig, trainingPrograms } from '@/lib/content';
 export const metadata: Metadata = {
   title: 'Pelatihan',
   description: `Program pelatihan cybersecurity, networking, dan programming dari ${siteConfig.name}.`,
+  openGraph: { images: ['/kegiatan/img-01.jpg'] },
 };
 
 export default function TrainingPage() {

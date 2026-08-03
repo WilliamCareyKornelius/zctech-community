@@ -2,11 +2,13 @@ import type { Metadata } from 'next';
 import { Shield, Target, Users, Zap } from 'lucide-react';
 import { JsonLd } from '@/components/shared/json-ld';
 import { FadeIn } from '@/components/shared/fade-in';
+import { DiscordCTA } from '@/components/sections/discord-cta';
 import { coreValues, siteConfig, team } from '@/lib/content';
 
 export const metadata: Metadata = {
   title: 'Tentang Kami',
   description: `Profil organisasi ${siteConfig.name}, visi, misi, dan tim pengurus komunitas tech dan cybersecurity Indonesia.`,
+  openGraph: { images: ['/kegiatan/img-07.jpg'] },
 };
 
 export default function AboutPage() {
@@ -85,6 +87,43 @@ export default function AboutPage() {
       </section>
 
       <section className="w-full bg-zinc-950 px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl">
+          <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">Perjalanan Kami</span>
+          <h2 className="mt-3 text-3xl font-bold text-white sm:text-4xl">Sejarah Singkat</h2>
+          <div className="mt-8 space-y-4 text-zinc-400">
+            <p>
+              ZCTech Community berawal dari grup diskusi kecil yang ingin meningkatkan awareness keamanan siber di kalangan pelajar dan profesional muda Indonesia. Seiring waktu, diskusi berkembang menjadi workshop daring, meetup luring, dan kompetisi yang melibatkan ratusan peserta.
+            </p>
+            <p>
+              Kini kami menjadi wadah aktif untuk belajar bersama, berbagi wawasan, dan mempersiapkan talenta tech menghadapi tantangan industri yang semakin kompleks.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="w-full bg-black px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl">
+          <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">Tata Kelola</span>
+          <h2 className="mt-3 text-3xl font-bold text-white sm:text-4xl">Struktur Organisasi</h2>
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+            {[
+              { title: 'Community Lead', desc: 'Arah strategis dan representasi komunitas', icon: Target },
+              { title: 'Program & Training', desc: 'Kurator silabus, mentor, dan jadwal kegiatan', icon: Users },
+              { title: 'Competition & CTF', desc: 'Pengembangan soal, event, dan kurasi lomba', icon: Zap },
+            ].map((item) => (
+              <div key={item.title} className="rounded-2xl border border-white/10 bg-zinc-950 p-6 text-center">
+                <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
+                  <item.icon className="h-5 w-5" />
+                </div>
+                <h3 className="font-bold text-white">{item.title}</h3>
+                <p className="mt-2 text-sm text-zinc-400">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="w-full bg-zinc-950 px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl text-center">
           <h2 className="text-3xl font-bold text-white sm:text-4xl">Tim Pengurus Inti</h2>
           <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -119,6 +158,8 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      <DiscordCTA />
     </>
   );
 }

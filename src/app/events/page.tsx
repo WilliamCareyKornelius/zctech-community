@@ -6,6 +6,7 @@ import { events, siteConfig } from '@/lib/content';
 export const metadata: Metadata = {
   title: 'Kegiatan',
   description: `Jadwal kegiatan, workshop, meetup, webinar, dan CTF dari ${siteConfig.name}.`,
+  openGraph: { images: ['/kegiatan/img-01.jpg'] },
 };
 
 export default function EventsPage() {

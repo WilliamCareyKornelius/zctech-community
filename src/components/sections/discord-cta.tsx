@@ -15,13 +15,13 @@ export function DiscordCTA() {
   const [data, setData] = useState<DiscordData>({ memberCount: null, onlineCount: null, guildId: null });
 
   useEffect(() => {
-    fetch('https://discord.com/api/invites/s67RfATTBk?with_counts=true&with_expiration=true')
+    fetch('/api/discord')
       .then((res) => res.json())
       .then((json) => {
         setData({
-          memberCount: json.approximate_member_count,
-          onlineCount: json.approximate_presence_count,
-          guildId: json.guild?.id,
+          memberCount: json.memberCount ?? siteConfig.stats.members,
+          onlineCount: json.onlineCount ?? null,
+          guildId: json.guildId ?? null,
         });
       })
       .catch(() => {

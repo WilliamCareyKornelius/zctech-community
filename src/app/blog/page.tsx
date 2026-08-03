@@ -6,6 +6,7 @@ import { posts, siteConfig } from '@/lib/content';
 export const metadata: Metadata = {
   title: 'Blog',
   description: `Artikel, tutorial, writeup, dan opini dari komunitas ${siteConfig.name}.`,
+  openGraph: { images: ['/kegiatan/img-04.jpg'] },
 };
 
 export default function BlogPage() {

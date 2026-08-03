@@ -18,11 +18,13 @@ export const metadata: Metadata = {
     description: siteConfig.description,
     type: 'website',
     locale: 'id_ID',
+    images: [{ url: '/kegiatan/img-07.jpg' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: siteConfig.name,
     description: siteConfig.description,
+    images: [{ url: '/kegiatan/img-07.jpg' }],
   },
 };
 

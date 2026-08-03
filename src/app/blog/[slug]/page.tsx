@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, Clock, User } from 'lucide-react';
 import { JsonLd } from '@/components/shared/json-ld';
 import { CopyButton } from '@/components/shared/copy-button';
-import { posts, siteConfig } from '@/lib/content';
+import { posts, siteConfig, team } from '@/lib/content';
 
 type Params = Promise<{ slug: string }>;
 
@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   return {
     title: post.title,
     description: post.excerpt,
-    openGraph: { title: post.title, description: post.excerpt, type: 'article' },
+    openGraph: { title: post.title, description: post.excerpt, type: 'article', images: [{ url: post.coverImage }] },
   };
 }
 
@@ -32,6 +32,7 @@ export default async function BlogDetailPage({ params }: { params: Params }) {
   const related = posts
     .filter((p) => p.category === post.category && p.slug !== post.slug)
     .slice(0, 2);
+  const author = team.find((m) => m.name === post.author);
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -100,10 +101,10 @@ export default async function BlogDetailPage({ params }: { params: Params }) {
               {renderContent(post.content)}
             </article>
 
-            <div className="mt-10 flex items-center gap-2">
+            <div className="mt-10 flex flex-wrap items-center gap-2">
               <CopyButton text={shareUrl} label="Copy link" />
               <a
-                href={`https://x.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`}
+                href={`https://x.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(post.title)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-lg border border-white/10 bg-black px-4 py-2 text-sm text-zinc-300 transition hover:bg-zinc-900"
@@ -111,12 +112,12 @@ export default async function BlogDetailPage({ params }: { params: Params }) {
                 Share X
               </a>
               <a
-                href={`https://wa.me/?text=${encodeURIComponent(shareUrl)}`}
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-lg border border-white/10 bg-black px-4 py-2 text-sm text-zinc-300 transition hover:bg-zinc-900"
               >
-                WhatsApp
+                LinkedIn
               </a>
             </div>
           </div>
@@ -124,7 +125,17 @@ export default async function BlogDetailPage({ params }: { params: Params }) {
           <aside className="space-y-8">
             <div className="rounded-2xl border border-white/10 bg-black p-6">
               <h3 className="font-bold text-white">Tentang Penulis</h3>
-              <p className="mt-2 text-zinc-400">{post.author} — kontributor blog komunitas ZCTech.</p>
+              <div className="mt-4 flex items-center gap-3">
+                <img
+                  src={author?.image ?? '/kegiatan/img-07.jpg'}
+                  alt={post.author}
+                  className="h-12 w-12 rounded-full object-cover"
+                />
+                <div>
+                  <p className="font-semibold text-white">{post.author}</p>
+                  <p className="text-sm text-zinc-400">Kontributor blog ZCTech</p>
+                </div>
+              </div>
             </div>
 
             {related.length > 0 && (

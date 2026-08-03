@@ -6,6 +6,7 @@ import { siteConfig } from '@/lib/content';
 export const metadata: Metadata = {
   title: 'Hubungi Kami',
   description: `Kontak ${siteConfig.name} melalui form, email, atau social media. Kami terbuka untuk kolaborasi dan pertanyaan.`,
+  openGraph: { images: ['/kegiatan/img-07.jpg'] },
 };
 
 export default function ContactPage() {

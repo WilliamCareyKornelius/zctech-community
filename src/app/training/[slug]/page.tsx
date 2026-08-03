@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   return {
     title: program.title,
     description: program.description,
-    openGraph: { title: program.title, description: program.description },
+    openGraph: { title: program.title, description: program.description, images: [{ url: program.coverImage }] },
   };
 }
 
@@ -89,7 +89,7 @@ export default async function TrainingDetailPage({ params }: { params: Params })
           <div className="space-y-6">
             <div className="rounded-2xl border border-white/10 bg-black p-6">
               <h3 className="font-bold text-white">Daftar Pelatihan</h3>
-              <p className="mt-2 text-sm text-zinc-400">Hubungi kami melalui WhatsApp atau Discord untuk pendaftaran.</p>
+              <p className="mt-2 text-sm text-zinc-400">Hubungi kami melalui Discord atau form kontak untuk pendaftaran.</p>
               <a
                 href={siteConfig.socials.discord}
                 target="_blank"
@@ -98,14 +98,12 @@ export default async function TrainingDetailPage({ params }: { params: Params })
               >
                 Daftar via Discord
               </a>
-              <a
-                href={`https://wa.me/?text=${encodeURIComponent(`Halo, saya ingin mendaftar pelatihan ${program.title}`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href="/contact"
                 className="mt-3 block w-full rounded-xl border border-white/10 bg-zinc-900 py-3 text-center font-semibold text-white transition hover:bg-zinc-800"
               >
-                Daftar via WhatsApp
-              </a>
+                Daftar via Kontak
+              </Link>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-black p-6">

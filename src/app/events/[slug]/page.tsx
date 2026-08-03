@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   return {
     title: event.title,
     description: event.description,
-    openGraph: { title: event.title, description: event.description },
+    openGraph: { title: event.title, description: event.description, images: [{ url: event.coverImage }] },
   };
 }
 
@@ -129,20 +129,20 @@ export default async function EventDetailPage({ params }: { params: Params }) {
               <div className="mt-3 flex gap-2 text-sm">
                 <CopyButton text={shareUrl} label="Copy link" />
                 <a
-                  href={`https://wa.me/?text=${encodeURIComponent(shareUrl)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-lg border border-white/10 px-3 py-2 text-zinc-300 hover:bg-zinc-900"
-                >
-                  WhatsApp
-                </a>
-                <a
-                  href={`https://x.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`}
+                  href={`https://x.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(event.title)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="rounded-lg border border-white/10 px-3 py-2 text-zinc-300 hover:bg-zinc-900"
                 >
                   X
+                </a>
+                <a
+                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg border border-white/10 px-3 py-2 text-zinc-300 hover:bg-zinc-900"
+                >
+                  LinkedIn
                 </a>
               </div>
             </div>

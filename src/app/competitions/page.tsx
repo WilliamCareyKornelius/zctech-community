@@ -6,6 +6,7 @@ import { competitions, siteConfig } from '@/lib/content';
 export const metadata: Metadata = {
   title: 'Lomba & Kompetisi',
   description: `Agregator kompetisi tech nasional dan internasional untuk komunitas ${siteConfig.name}.`,
+  openGraph: { images: ['/kegiatan/img-11.jpg'] },
 };
 
 export default function CompetitionsPage() {
