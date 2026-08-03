@@ -157,10 +157,10 @@ export const Header = () => {
         </a>
 
         <a
-          href="#gallery"
+          href="/events"
           className="w-full sm:w-auto px-8 py-4 rounded-full bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border border-white/10 font-semibold text-xs transition-all flex items-center justify-center gap-2"
         >
-          <span>Jelajahi Galeri 3D</span>
+          <span>Lihat Kegiatan</span>
         </a>
       </div>
     </div>
@@ -210,4 +210,4 @@ export const ProductCard = ({
   );
 };
 
-export default ProductCard;
+export default HeroParallax;

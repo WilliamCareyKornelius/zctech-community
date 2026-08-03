@@ -2,13 +2,28 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { clsx } from 'clsx';
-import { FloatingDockNavbar } from '@/components/ui/floating-dock-navbar';
+import { ThemeProvider } from '@/components/shared/theme-provider';
+import { Navbar } from '@/components/shared/navbar';
+import { Footer } from '@/components/shared/footer';
+import { siteConfig } from '@/lib/content';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'ZCTech Community | Tech & Cybersecurity Ecosystem',
-  description: 'Official community hub for cybersecurity practitioners and tech developers in Indonesia.',
+  title: { default: siteConfig.name, template: `%s | ${siteConfig.name}` },
+  description: siteConfig.description,
+  metadataBase: new URL(siteConfig.url),
+  openGraph: {
+    title: siteConfig.name,
+    description: siteConfig.description,
+    type: 'website',
+    locale: 'id_ID',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: siteConfig.name,
+    description: siteConfig.description,
+  },
 };
 
 export default function RootLayout({
@@ -17,12 +32,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark scroll-smooth">
-      <body className={clsx(inter.className, 'min-h-screen bg-black text-slate-100 antialiased selection:bg-emerald-500 selection:text-black overflow-x-hidden')}>
-        <FloatingDockNavbar />
-        <main>
-          {children}
-        </main>
+    <html lang="id" className="scroll-smooth" suppressHydrationWarning>
+      <body
+        className={clsx(
+          inter.className,
+          'min-h-screen bg-white text-zinc-900 antialiased selection:bg-emerald-500 selection:text-white dark:bg-black dark:text-slate-100 overflow-x-hidden'
+        )}
+      >
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Navbar />
+          <main className="pt-16">{children}</main>
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   );
