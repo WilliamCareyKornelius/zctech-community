@@ -47,7 +47,7 @@ export function SkiperGallery() {
             loop={true}
             showNavigation={true}
             showPagination={true}
-            autoplay={true}
+            autoplay={false}
           />
         </motion.div>
 

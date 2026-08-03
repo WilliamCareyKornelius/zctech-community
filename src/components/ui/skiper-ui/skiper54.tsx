@@ -123,7 +123,7 @@ const Carousel_006 = ({
           : []
       }
     >
-      <CarouselContent className="flex h-[500px] w-full">
+      <CarouselContent className="flex h-[420px] w-full">
         {images.map((img, index) => (
           <CarouselItem
             key={index}
@@ -137,12 +137,14 @@ const Carousel_006 = ({
                     ? "inset(15% 0 15% 0 round 2rem)"
                     : "inset(0 0 0 0 round 2rem)",
               }}
+              style={{ willChange: 'clip-path' }}
               className="h-full w-full overflow-hidden rounded-3xl"
             >
               <div className="relative h-full w-full border">
                 <img
                   src={img.src}
                   alt={img.alt}
+                  loading="lazy"
                   className="h-full w-full scale-105 object-cover"
                 />
               </div>

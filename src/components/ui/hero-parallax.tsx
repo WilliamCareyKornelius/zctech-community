@@ -51,34 +51,34 @@ export const HeroParallax = ({
   const springConfig = { stiffness: 300, damping: 30, bounce: 100 };
 
   const translateX = useSpring(
-    useTransform(scrollYProgress, [0, 1], [0, 1000]),
+    useTransform(scrollYProgress, [0, 1], [0, 400]),
     springConfig
   );
   const translateXReverse = useSpring(
-    useTransform(scrollYProgress, [0, 1], [0, -1000]),
+    useTransform(scrollYProgress, [0, 1], [0, -400]),
     springConfig
   );
   const rotateX = useSpring(
-    useTransform(scrollYProgress, [0, 0.2], [15, 0]),
+    useTransform(scrollYProgress, [0, 0.2], [8, 0]),
     springConfig
   );
   const opacity = useSpring(
-    useTransform(scrollYProgress, [0, 0.2], [0.2, 1]),
+    useTransform(scrollYProgress, [0, 0.2], [0.85, 1]),
     springConfig
   );
   const rotateZ = useSpring(
-    useTransform(scrollYProgress, [0, 0.2], [20, 0]),
+    useTransform(scrollYProgress, [0, 0.2], [8, 0]),
     springConfig
   );
   const translateY = useSpring(
-    useTransform(scrollYProgress, [0, 0.2], [-700, 500]),
+    useTransform(scrollYProgress, [0, 0.2], [-120, 80]),
     springConfig
   );
 
   return (
     <div
       ref={ref}
-      className="h-[300vh] py-40 overflow-hidden antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d] bg-black"
+      className="min-h-[110vh] overflow-hidden antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d] bg-black"
     >
       <Header />
       <motion.div
@@ -87,10 +87,11 @@ export const HeroParallax = ({
           rotateZ,
           translateY,
           opacity,
+          willChange: 'transform, opacity',
         }}
         className=""
       >
-        <motion.div className="flex flex-row-reverse space-x-reverse space-x-20 mb-20">
+        <motion.div className="flex flex-row-reverse space-x-reverse space-x-8 mb-8" style={{ willChange: 'transform' }}>
           {firstRow.map((product, idx) => (
             <ProductCard
               product={product}
@@ -99,7 +100,7 @@ export const HeroParallax = ({
             />
           ))}
         </motion.div>
-        <motion.div className="flex flex-row mb-20 space-x-20">
+        <motion.div className="flex flex-row mb-8 space-x-8" style={{ willChange: 'transform' }}>
           {secondRow.map((product, idx) => (
             <ProductCard
               product={product}
@@ -108,7 +109,7 @@ export const HeroParallax = ({
             />
           ))}
         </motion.div>
-        <motion.div className="flex flex-row-reverse space-x-reverse space-x-20">
+        <motion.div className="flex flex-row-reverse space-x-reverse space-x-8" style={{ willChange: 'transform' }}>
           {thirdRow.map((product, idx) => (
             <ProductCard
               product={product}
@@ -124,8 +125,8 @@ export const HeroParallax = ({
 
 export const Header = () => {
   return (
-    <div className="max-w-7xl relative mx-auto py-20 md:py-40 px-6 w-full left-0 top-0 z-20">
-      <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 backdrop-blur-xl mb-8">
+    <div className="max-w-7xl relative mx-auto pt-24 pb-8 md:pt-32 md:pb-12 px-6 w-full left-0 top-0 z-20">
+      <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 backdrop-blur-xl mb-6">
         <span className="relative flex h-2 w-2">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
           <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -182,12 +183,13 @@ export const ProductCard = ({
     <motion.div
       style={{
         x: translate,
+        willChange: 'transform',
       }}
       whileHover={{
-        y: -20,
+        y: -10,
       }}
       key={product.title}
-      className="group/product h-96 w-[30rem] relative flex-shrink-0 rounded-2xl overflow-hidden border border-white/10 bg-zinc-950 shadow-2xl"
+      className="group/product h-64 w-[22rem] sm:h-72 sm:w-[26rem] relative flex-shrink-0 rounded-2xl overflow-hidden border border-white/10 bg-zinc-950 shadow-2xl"
     >
       <a
         href={product.link}
@@ -198,7 +200,7 @@ export const ProductCard = ({
         <img
           src={product.thumbnail}
           alt={product.title}
-          loading="eager"
+          loading="lazy"
           className="object-cover object-center absolute h-full w-full inset-0 opacity-80 group-hover/product:opacity-100 transition-opacity duration-300"
         />
       </a>
