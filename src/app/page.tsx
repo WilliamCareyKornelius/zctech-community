@@ -1,7 +1,7 @@
 'use client';
 
 import HeroParallax from '@/components/ui/hero-parallax';
-import { StatsBar } from '@/components/sections/stats-bar';
+import BentoFeatures from '@/components/ui/bento-features';
 import { CommunityGallery } from '@/components/sections/community-gallery';
 import { UpcomingEvents } from '@/components/sections/upcoming-events';
 import { LatestBlog } from '@/components/sections/latest-blog';
@@ -23,7 +23,7 @@ export default function Home() {
         }}
       />
       <HeroParallax />
-      <StatsBar />
+      <BentoFeatures />
       <CommunityGallery />
       <UpcomingEvents />
       <LatestBlog />
