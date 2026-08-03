@@ -209,3 +209,5 @@ export const ProductCard = ({
     </motion.div>
   );
 };
+
+export default ProductCard;

@@ -99,3 +99,5 @@ export function FloatingDockNavbar() {
     </header>
   );
 }
+
+export default FloatingDockNavbar;

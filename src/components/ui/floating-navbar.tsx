@@ -106,3 +106,5 @@ export function FloatingNavbar() {
     </header>
   );
 }
+
+export default FloatingNavbar;

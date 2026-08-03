@@ -87,3 +87,5 @@ export function MediaGallery() {
     </section>
   );
 }
+
+export default MediaGallery;

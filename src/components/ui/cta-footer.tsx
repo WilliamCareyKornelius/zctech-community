@@ -84,3 +84,5 @@ export function CTAFooter() {
     </>
   );
 }
+
+export default CTAFooter;

@@ -33,3 +33,5 @@ export function MarqueeTicker() {
     </div>
   );
 }
+
+export default MarqueeTicker;

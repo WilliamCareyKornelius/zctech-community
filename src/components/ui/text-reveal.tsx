@@ -34,3 +34,5 @@ export function TextReveal({
     </div>
   );
 }
+
+export default TextReveal;

@@ -90,3 +90,5 @@ export function BentoFeatures() {
     </section>
   );
 }
+
+export default BentoFeatures;

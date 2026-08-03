@@ -91,3 +91,5 @@ export function ProgramSpotlights() {
     </section>
   );
 }
+
+export default ProgramSpotlights;

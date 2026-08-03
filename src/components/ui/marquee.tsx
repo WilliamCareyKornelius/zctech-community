@@ -33,3 +33,5 @@ export function Marquee() {
     </div>
   );
 }
+
+export default Marquee;

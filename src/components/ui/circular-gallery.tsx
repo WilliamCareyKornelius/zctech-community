@@ -181,3 +181,5 @@ export function CircularGallery() {
     </section>
   );
 }
+
+export default CircularGallery;
