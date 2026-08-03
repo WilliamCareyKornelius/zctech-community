@@ -2,7 +2,7 @@
 
 import HeroParallax from '@/components/ui/hero-parallax';
 import BentoFeatures from '@/components/ui/bento-features';
-import { CommunityGallery } from '@/components/sections/community-gallery';
+import { SkiperGallery } from '@/components/sections/skiper-gallery';
 import { UpcomingEvents } from '@/components/sections/upcoming-events';
 import { LatestBlog } from '@/components/sections/latest-blog';
 import { DiscordCTA } from '@/components/sections/discord-cta';
@@ -24,7 +24,7 @@ export default function Home() {
       />
       <HeroParallax />
       <BentoFeatures />
-      <CommunityGallery />
+      <SkiperGallery />
       <UpcomingEvents />
       <LatestBlog />
       <DiscordCTA />

@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Geist } from 'next/font/google';
 import './globals.css';
 import { clsx } from 'clsx';
 import { ThemeProvider } from '@/components/shared/theme-provider';
 import { Navbar } from '@/components/shared/navbar';
 import { Footer } from '@/components/shared/footer';
 import { siteConfig } from '@/lib/content';
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -34,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className="scroll-smooth" suppressHydrationWarning>
+    <html lang="id" className={cn("scroll-smooth", "font-sans", geist.variable)} suppressHydrationWarning>
       <body
         className={clsx(
           inter.className,
