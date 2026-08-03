@@ -1,10 +1,11 @@
 'use client';
 
 import HeroParallax from '@/components/ui/hero-parallax';
-import BentoFeatures from '@/components/ui/bento-features';
+import FeatureCards from '@/components/ui/feature-cards';
 import { SkiperGallery } from '@/components/sections/skiper-gallery';
 import { UpcomingEvents } from '@/components/sections/upcoming-events';
 import { LatestBlog } from '@/components/sections/latest-blog';
+import { CommunityVoices } from '@/components/sections/community-voices';
 import { DiscordCTA } from '@/components/sections/discord-cta';
 import { JsonLd } from '@/components/shared/json-ld';
 import { siteConfig } from '@/lib/content';
@@ -23,10 +24,11 @@ export default function Home() {
         }}
       />
       <HeroParallax />
-      <BentoFeatures />
+      <FeatureCards />
       <SkiperGallery />
       <UpcomingEvents />
       <LatestBlog />
+      <CommunityVoices />
       <DiscordCTA />
     </>
   );

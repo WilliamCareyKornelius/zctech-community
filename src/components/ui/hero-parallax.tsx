@@ -63,7 +63,7 @@ export const HeroParallax = ({
     springConfig
   );
   const opacity = useSpring(
-    useTransform(scrollYProgress, [0, 0.2], [0.85, 1]),
+    useTransform(scrollYProgress, [0, 0.2], [0.6, 1]),
     springConfig
   );
   const rotateZ = useSpring(
@@ -71,7 +71,7 @@ export const HeroParallax = ({
     springConfig
   );
   const translateY = useSpring(
-    useTransform(scrollYProgress, [0, 0.2], [-120, 80]),
+    useTransform(scrollYProgress, [0, 0.2], [0, 120]),
     springConfig
   );
 
@@ -89,7 +89,7 @@ export const HeroParallax = ({
           opacity,
           willChange: 'transform, opacity',
         }}
-        className=""
+        className="absolute inset-0 z-0 w-full h-full flex flex-col justify-center"
       >
         <motion.div className="flex flex-row-reverse space-x-reverse space-x-8 mb-8" style={{ willChange: 'transform' }}>
           {firstRow.map((product, idx) => (
@@ -125,7 +125,7 @@ export const HeroParallax = ({
 
 export const Header = () => {
   return (
-    <div className="max-w-7xl relative mx-auto pt-24 pb-8 md:pt-32 md:pb-12 px-6 w-full left-0 top-0 z-20">
+    <div className="max-w-7xl relative mx-auto pt-20 pb-8 md:pt-28 md:pb-12 px-6 w-full left-0 top-0 z-30">
       <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 backdrop-blur-xl mb-6">
         <span className="relative flex h-2 w-2">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -136,13 +136,13 @@ export const Header = () => {
         </span>
       </div>
 
-      <h1 className="text-4xl md:text-7xl font-extrabold text-white leading-[1.1] max-w-4xl tracking-tight">
+      <h1 className="text-4xl md:text-7xl font-extrabold text-white leading-[1.1] max-w-4xl tracking-tight drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
         Pusat Ekosistem <br />
-        <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">
+        <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
           Cybersecurity & Tech Talent
         </span>
       </h1>
-      <p className="max-w-2xl text-base md:text-xl mt-8 text-zinc-400 font-normal leading-relaxed">
+      <p className="max-w-2xl text-base md:text-xl mt-6 text-zinc-200 font-normal leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
         Wadah terbuka bagi para antusias keamanan siber, pentester, dan pengembang teknologi Indonesia. Mari berbagi wawasan, ikuti pelatihan rutin, dan tingkatkan keahlian teknis Anda.
       </p>
 
@@ -204,7 +204,7 @@ export const ProductCard = ({
           className="object-cover object-center absolute h-full w-full inset-0 opacity-80 group-hover/product:opacity-100 transition-opacity duration-300"
         />
       </a>
-      <div className="absolute inset-0 h-full w-full opacity-0 group-hover/product:opacity-80 bg-black pointer-events-none transition-opacity duration-300"></div>
+      <div className="absolute inset-0 h-full w-full opacity-40 bg-black/50 pointer-events-none"></div>
       <h2 className="font-bold text-white absolute bottom-4 left-4 opacity-0 group-hover/product:opacity-100 transition-opacity duration-300 text-sm z-10">
         {product.title}
       </h2>
