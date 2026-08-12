@@ -5,7 +5,7 @@ import { events, siteConfig } from '@/lib/content';
 
 export const metadata: Metadata = {
   title: 'Kegiatan',
-  description: `Jadwal kegiatan, workshop, meetup, webinar, dan CTF dari ${siteConfig.name}.`,
+  description: `Kegiatan komunitas ZCTech yang fokus pada hands-on cybersecurity.`,    
   openGraph: { images: ['/kegiatan/img-01.jpg'] },
 };
 
@@ -28,7 +28,7 @@ export default function EventsPage() {
           Kegiatan Komunitas
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg text-zinc-400">
-          Workshop, meetup, webinar, dan kompetisi untuk mengasah keahlian cybersecurity dan tech.
+          Kegiatan hands-on untuk belajar cybersecurity bersama anggota ZCTech.
         </p>
       </section>
 

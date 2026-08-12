@@ -57,7 +57,7 @@ export default function AboutPage() {
             <h2 className="text-2xl font-bold text-white">Misi</h2>
             <ul className="mt-4 list-disc space-y-2 pl-5 text-zinc-400">
               <li>Menyediakan wadah belajar berbasis hands-on untuk talenta cybersecurity.</li>
-              <li>Mengadakan kegiatan rutin: workshop, webinar, meetup, dan kompetisi.</li>
+              <li>Mengadakan kegiatan komunitas seperti workshop dan diskusi rutin.</li>
               <li>Membangun jejaring antara praktisi, akademisi, dan industri.</li>
               <li>Mendorong etika dan tanggung jawab dalam keamanan siber.</li>
             </ul>
@@ -92,7 +92,7 @@ export default function AboutPage() {
           <h2 className="mt-3 text-3xl font-bold text-white sm:text-4xl">Sejarah Singkat</h2>
           <div className="mt-8 space-y-4 text-zinc-400">
             <p>
-              ZCTech Community berawal dari grup diskusi kecil yang ingin meningkatkan awareness keamanan siber di kalangan pelajar dan profesional muda Indonesia. Seiring waktu, diskusi berkembang menjadi workshop daring, meetup luring, dan kompetisi yang melibatkan ratusan peserta.
+              ZCTech Community berawal dari grup diskusi kecil yang ingin meningkatkan awareness keamanan siber di kalangan pelajar dan profesional muda Indonesia. Seiring waktu, diskusi berkembang menjadi workshop daring dan meetup luring yang melibatkan banyak anggota.
             </p>
             <p>
               Kini kami menjadi wadah aktif untuk belajar bersama, berbagi wawasan, dan mempersiapkan talenta tech menghadapi tantangan industri yang semakin kompleks.
@@ -108,8 +108,8 @@ export default function AboutPage() {
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {[
               { title: 'Community Lead', desc: 'Arah strategis dan representasi komunitas', icon: Target },
-              { title: 'Program & Training', desc: 'Kurator silabus, mentor, dan jadwal kegiatan', icon: Users },
-              { title: 'Competition & CTF', desc: 'Pengembangan soal, event, dan kurasi lomba', icon: Zap },
+              { title: 'Program & Kegiatan', desc: 'Kurator topik, mentor, dan jadwal kegiatan komunitas', icon: Users },
+              { title: 'Konten & Riset', desc: 'Artikel, sharing session, dan riset keamanan siber', icon: Zap },
             ].map((item) => (
               <div key={item.title} className="rounded-2xl border border-white/10 bg-zinc-950 p-6 text-center">
                 <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">

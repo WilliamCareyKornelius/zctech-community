@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Calendar, GraduationCap, Trophy, BookOpen, ArrowRight } from 'lucide-react';
+import { Calendar, BookOpen, Users, ArrowRight } from 'lucide-react';
 
 export function FeatureCards() {
   const programs = [
@@ -15,18 +15,11 @@ export function FeatureCards() {
       tag: 'Regular Agenda',
     },
     {
-      title: 'Training & Workshops',
-      path: '/training',
-      desc: 'Pelatihan praktis intensif ethical hacking dan dasar pentesting.',
-      icon: <GraduationCap className="w-5 h-5 text-zinc-300" />,
-      tag: 'Hands-on Session',
-    },
-    {
-      title: 'Competitions Aggregator',
-      path: '/competitions',
-      desc: 'Informasi kompetisi CTF, Bug Bounty, dan ajang perlombaan IT.',
-      icon: <Trophy className="w-5 h-5 text-zinc-300" />,
-      tag: 'CTF & Contests',
+      title: 'Community & Networking',
+      path: 'https://discord.gg/s67RfATTBk',
+      desc: 'Ruang diskusi, tanya jawab, dan berjejaring bersama anggota ZCTech.',
+      icon: <Users className="w-5 h-5 text-zinc-300" />,
+      tag: 'Komunitas',
     },
     {
       title: 'Tech Blog & Insights',
@@ -44,10 +37,10 @@ export function FeatureCards() {
           Program Pillars
         </span>
         <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-zinc-100 mt-2 mb-3">
-          Ekosistem Kegiatan Organisasi
+          Pilar Komunitas ZCTech
         </h2>
         <p className="text-zinc-400 text-xs sm:text-sm max-w-lg mx-auto">
-          Fokus utama ZCTech Community dalam mengedukasi dan mengembangkan kapasitas siber.
+          Wadah belajar, berbagi, dan berjejaring bagi para antusias cybersecurity.
         </p>
       </div>
 
@@ -79,6 +72,8 @@ export function FeatureCards() {
             <div className="mt-6 pt-4 border-t border-zinc-800/60 flex items-center justify-between">
               <Link
                 href={prog.path}
+                target={prog.path.startsWith('http') ? '_blank' : undefined}
+                rel={prog.path.startsWith('http') ? 'noopener noreferrer' : undefined}
                 className="text-xs font-medium text-zinc-300 group-hover:text-white flex items-center gap-1 transition-colors"
               >
                 <span>Lihat Detail Program</span>

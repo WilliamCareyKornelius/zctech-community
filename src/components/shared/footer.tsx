@@ -5,8 +5,6 @@ import { siteConfig } from '@/lib/content';
 const footerLinks = [
   { href: '/about', label: 'Tentang' },
   { href: '/events', label: 'Kegiatan' },
-  { href: '/training', label: 'Pelatihan' },
-  { href: '/competitions', label: 'Lomba' },
   { href: '/blog', label: 'Blog' },
   { href: '/contact', label: 'Kontak' },
 ];

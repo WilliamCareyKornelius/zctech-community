@@ -1,10 +1,10 @@
 import { MetadataRoute } from 'next';
-import { events, posts, trainingPrograms, competitions, siteConfig } from '@/lib/content';
+import { events, posts, siteConfig } from '@/lib/content';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = siteConfig.url;
 
-  const routes = ['', '/about', '/events', '/training', '/competitions', '/blog', '/contact'].map((path) => ({
+  const routes = ['', '/about', '/events', '/blog', '/contact'].map((path) => ({
     url: `${base}${path}`,
     lastModified: new Date(),
     changeFrequency: 'weekly' as const,
@@ -18,20 +18,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  const trainingRoutes = trainingPrograms.map((t) => ({
-    url: `${base}/training/${t.slug}`,
-    lastModified: new Date(),
-    changeFrequency: 'monthly' as const,
-    priority: 0.6,
-  }));
-
-  const competitionRoutes = competitions.map((c) => ({
-    url: `${base}/competitions/${c.slug}`,
-    lastModified: new Date(c.deadline),
-    changeFrequency: 'weekly' as const,
-    priority: 0.6,
-  }));
-
   const postRoutes = posts.map((p) => ({
     url: `${base}/blog/${p.slug}`,
     lastModified: new Date(p.publishedAt),
@@ -39,5 +25,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...routes, ...eventRoutes, ...trainingRoutes, ...competitionRoutes, ...postRoutes];
+  return [...routes, ...eventRoutes, ...postRoutes];
 }

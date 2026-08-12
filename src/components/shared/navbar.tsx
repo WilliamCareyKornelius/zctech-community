@@ -12,8 +12,6 @@ const navLinks = [
   { href: '/', label: 'Beranda' },
   { href: '/about', label: 'Tentang' },
   { href: '/events', label: 'Kegiatan' },
-  { href: '/training', label: 'Pelatihan' },
-  { href: '/competitions', label: 'Lomba' },
   { href: '/blog', label: 'Blog' },
   { href: '/contact', label: 'Kontak' },
 ];
@@ -84,15 +82,15 @@ export function Navbar() {
               </li>
             ))}
             <li>
-              <a
-                href={siteConfig.discordInvite}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full rounded-full bg-emerald-400 py-2 text-center text-xs font-bold text-black"
-              >
-                Gabung Discord
-              </a>
-            </li>
+            <a
+              href={siteConfig.discordInvite}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full rounded-full bg-emerald-400 py-2 text-center text-xs font-bold text-black"
+            >
+              Gabung Discord
+            </a>
+          </li>
           </ul>
         </div>
       )}
