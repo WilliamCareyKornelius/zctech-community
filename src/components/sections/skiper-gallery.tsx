@@ -7,9 +7,9 @@ const images = [
   { src: '/kegiatan/img-01.jpg', alt: 'Live Bug Bounty Workshop', title: 'Live Bug Bounty Workshop' },
   { src: '/kegiatan/img-02.jpg', alt: 'Community Tech Meetup', title: 'Community Tech Meetup' },
   { src: '/kegiatan/img-03.jpg', alt: 'Hands-on Pentest Lab', title: 'Hands-on Pentest Lab' },
-  { src: '/kegiatan/img-04.jpg', alt: 'Malware Analysis Training', title: 'Malware Analysis Training' },
+  { src: '/kegiatan/img-04.jpg', alt: 'Malware Analysis Sharing', title: 'Malware Analysis Sharing' },
   { src: '/kegiatan/img-05.jpg', alt: 'Sharing Session Industri', title: 'Sharing Session Industri' },
-  { src: '/kegiatan/img-06.jpg', alt: 'CTF Competition Mentoring', title: 'CTF Competition Mentoring' },
+  { src: '/kegiatan/img-06.jpg', alt: 'Diskusi & Mentoring Komunitas', title: 'Diskusi & Mentoring Komunitas' },
   { src: '/kegiatan/img-07.jpg', alt: 'Gathering Anggota Komunitas', title: 'Gathering Anggota Komunitas' },
   { src: '/kegiatan/img-08.jpg', alt: 'Persiapan Security Audit', title: 'Persiapan Security Audit' },
   { src: '/kegiatan/img-09.jpg', alt: 'Networking & Synergy', title: 'Networking & Synergy' },
@@ -30,7 +30,7 @@ export function SkiperGallery() {
           <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">Galeri & Video</span>
           <h2 className="mt-3 text-3xl font-extrabold text-white sm:text-4xl">Momen Komunitas Kami</h2>
           <p className="mx-auto mt-4 max-w-2xl text-zinc-400">
-            Dokumentasi kegiatan, meetup, dan pelatihan ZCTech Community.
+            Dokumentasi kegiatan, meetup, dan workshop ZCTech Community.
           </p>
         </motion.div>
 

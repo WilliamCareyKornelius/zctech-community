@@ -20,7 +20,7 @@ export function CommunityVoices() {
           description="Perjalanan dan harapan komunitas dari pendamping utama kami."
           testimonials={[aminTestimonial]}
           autoplay={false}
-          className="text-white"
+          className="text-white py-0 md:py-0"
         />
       </div>
     </section>

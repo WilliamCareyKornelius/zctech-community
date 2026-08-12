@@ -10,6 +10,7 @@ export function FeatureCards() {
     {
       title: 'Events & Meetups',
       path: '/events',
+      linkLabel: 'Lihat Kegiatan',
       desc: 'Gathering rutin, webinar, dan sesi diskusi bersama praktisi industri.',
       icon: <Calendar className="w-5 h-5 text-zinc-300" />,
       tag: 'Regular Agenda',
@@ -17,6 +18,7 @@ export function FeatureCards() {
     {
       title: 'Community & Networking',
       path: 'https://discord.gg/s67RfATTBk',
+      linkLabel: 'Gabung Discord',
       desc: 'Ruang diskusi, tanya jawab, dan berjejaring bersama anggota ZCTech.',
       icon: <Users className="w-5 h-5 text-zinc-300" />,
       tag: 'Komunitas',
@@ -24,6 +26,7 @@ export function FeatureCards() {
     {
       title: 'Tech Blog & Insights',
       path: '/blog',
+      linkLabel: 'Baca Blog',
       desc: 'Artikel edukatif, analisis celah keamanan (writeups), dan tutorial teknis.',
       icon: <BookOpen className="w-5 h-5 text-zinc-300" />,
       tag: 'Technical Writeups',
@@ -31,10 +34,10 @@ export function FeatureCards() {
   ];
 
   return (
-    <section className="py-20 px-6 max-w-7xl mx-auto border-b border-zinc-900">
+    <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-b border-zinc-900">
       <div className="text-center mb-14">
         <span className="text-xs font-mono font-semibold tracking-widest text-zinc-400 uppercase">
-          Program Pillars
+          Pilar Kami
         </span>
         <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-zinc-100 mt-2 mb-3">
           Pilar Komunitas ZCTech
@@ -44,7 +47,7 @@ export function FeatureCards() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {programs.map((prog, i) => (
           <motion.div
             key={i}
@@ -76,7 +79,7 @@ export function FeatureCards() {
                 rel={prog.path.startsWith('http') ? 'noopener noreferrer' : undefined}
                 className="text-xs font-medium text-zinc-300 group-hover:text-white flex items-center gap-1 transition-colors"
               >
-                <span>Lihat Detail Program</span>
+                <span>{prog.linkLabel}</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
               </Link>
             </div>

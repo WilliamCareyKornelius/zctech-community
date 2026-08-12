@@ -35,7 +35,11 @@ export function UpcomingEvents() {
           </Link>
         </div>
 
-        <div className="flex snap-x gap-6 overflow-x-auto pb-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible">
+        <div className={
+          upcoming.length === 1
+            ? 'grid grid-cols-1 place-items-center gap-6'
+            : 'flex snap-x gap-6 overflow-x-auto pb-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible'
+        }>
           {upcoming.map((event, index) => (
             <motion.div
               key={event.slug}
@@ -43,7 +47,7 @@ export function UpcomingEvents() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               viewport={{ once: true }}
-              className="group w-[85vw] flex-shrink-0 snap-start overflow-hidden rounded-2xl border border-white/10 bg-black sm:w-auto"
+              className={`group overflow-hidden rounded-2xl border border-white/10 bg-black ${upcoming.length === 1 ? 'w-full max-w-2xl' : 'w-[85vw] flex-shrink-0 snap-start sm:w-auto'}`}
             >
               <div className="relative h-44 w-full">
                 <img src={event.coverImage} alt={event.title} className="h-full w-full object-cover" />

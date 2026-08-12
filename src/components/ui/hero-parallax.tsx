@@ -23,9 +23,9 @@ export const HeroParallax = ({
     { title: 'Live Bug Bounty Workshop', link: 'https://discord.gg/s67RfATTBk', thumbnail: '/kegiatan/img-01.jpg' },
     { title: 'Community Tech Meetup', link: 'https://discord.gg/s67RfATTBk', thumbnail: '/kegiatan/img-02.jpg' },
     { title: 'Hands-on Pentest Lab', link: 'https://discord.gg/s67RfATTBk', thumbnail: '/kegiatan/img-03.jpg' },
-    { title: 'Malware Analysis Training', link: 'https://discord.gg/s67RfATTBk', thumbnail: '/kegiatan/img-04.jpg' },
+    { title: 'Malware Analysis Sharing', link: 'https://discord.gg/s67RfATTBk', thumbnail: '/kegiatan/img-04.jpg' },
     { title: 'Sharing Session Industri', link: 'https://discord.gg/s67RfATTBk', thumbnail: '/kegiatan/img-05.jpg' },
-    { title: 'CTF Competition Mentoring', link: 'https://discord.gg/s67RfATTBk', thumbnail: '/kegiatan/img-06.jpg' },
+    { title: 'Diskusi & Mentoring Komunitas', link: 'https://discord.gg/s67RfATTBk', thumbnail: '/kegiatan/img-06.jpg' },
     { title: 'Gathering Anggota Komunitas', link: 'https://discord.gg/s67RfATTBk', thumbnail: '/kegiatan/img-07.jpg' },
     { title: 'Persiapan Security Audit', link: 'https://discord.gg/s67RfATTBk', thumbnail: '/kegiatan/img-08.jpg' },
     { title: 'Networking & Synergy', link: 'https://discord.gg/s67RfATTBk', thumbnail: '/kegiatan/img-09.jpg' },
@@ -143,7 +143,7 @@ export const Header = () => {
         </span>
       </h1>
       <p className="max-w-2xl text-base md:text-xl mt-6 text-zinc-200 font-normal leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-        Wadah terbuka bagi para antusias keamanan siber, pentester, dan pengembang teknologi Indonesia. Mari berbagi wawasan, ikuti pelatihan rutin, dan tingkatkan keahlian teknis Anda.
+        Wadah terbuka bagi para antusias keamanan siber, pentester, dan pengembang teknologi Indonesia. Mari berbagi wawasan, ikuti kegiatan komunitas, dan tingkatkan keahlian teknis Anda.
       </p>
 
       <div className="flex flex-col sm:flex-row items-center gap-4 mt-10">

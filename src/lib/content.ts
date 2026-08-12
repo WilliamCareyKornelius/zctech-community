@@ -30,7 +30,7 @@ export const coreValues: CoreValue[] = [
   },
   {
     title: 'Hands-on Learning',
-    description: 'Belajar paling efektif lewat praktik langsung di lab, CTF, dan proyek nyata.',
+    description: 'Belajar paling efektif lewat praktik langsung di lab dan proyek nyata.',
   },
   {
     title: 'Collaborative Growth',
@@ -45,8 +45,8 @@ export const coreValues: CoreValue[] = [
 export const team: TeamMember[] = [
   { name: 'William Kornelius', role: 'Founder & Community Lead', image: '/kegiatan/img-07.jpg', socmed: [{ platform: 'linkedin', url: 'https://linkedin.com/in/williamkornelius' }] },
   { name: 'Ari Setiawan', role: 'Lead Pentest Mentor', image: '/kegiatan/img-08.jpg', socmed: [{ platform: 'github', url: 'https://github.com' }] },
-  { name: 'Dewi Lestari', role: 'Training Program Manager', image: '/kegiatan/img-09.jpg', socmed: [{ platform: 'linkedin', url: 'https://linkedin.com' }] },
-  { name: 'Rizki Fauzi', role: 'CTF & Competition Lead', image: '/kegiatan/img-10.jpg', socmed: [{ platform: 'github', url: 'https://github.com' }] },
+  { name: 'Dewi Lestari', role: 'Community & Event Manager', image: '/kegiatan/img-09.jpg', socmed: [{ platform: 'linkedin', url: 'https://linkedin.com' }] },
+  { name: 'Rizki Fauzi', role: 'Content & Research Lead', image: '/kegiatan/img-10.jpg', socmed: [{ platform: 'github', url: 'https://github.com' }] },
 ];
 
 export const events: Event[] = [
