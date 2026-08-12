@@ -34,15 +34,15 @@ export function FeatureCards() {
   ];
 
   return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-b border-zinc-900">
-      <div className="text-center mb-14">
+    <section className="w-full bg-zinc-950 py-20 px-4 sm:px-6 lg:px-8 border-b border-zinc-900">
+      <div className="max-w-7xl mx-auto text-center mb-14">
         <span className="text-xs font-mono font-semibold tracking-widest text-zinc-400 uppercase">
           Pilar Kami
         </span>
-        <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-zinc-100 mt-2 mb-3">
+        <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-white mt-2 mb-3">
           Pilar Komunitas ZCTech
         </h2>
-        <p className="text-zinc-400 text-xs sm:text-sm max-w-lg mx-auto">
+        <p className="text-zinc-300 text-xs sm:text-sm max-w-lg mx-auto">
           Wadah belajar, berbagi, dan berjejaring bagi para antusias cybersecurity.
         </p>
       </div>
