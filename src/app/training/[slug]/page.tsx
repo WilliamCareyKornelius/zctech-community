@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Check, Clock, Users, Layers, BookOpen } from 'lucide-react';
+import { Clock, Users, Layers } from 'lucide-react';
 import { JsonLd } from '@/components/shared/json-ld';
 import { siteConfig, trainingPrograms } from '@/lib/content';
 
@@ -50,7 +50,6 @@ export default async function TrainingDetailPage({ params }: { params: Params })
           <div className="mt-6 flex flex-wrap gap-2">
             <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-sm font-semibold text-emerald-300 capitalize">{program.category}</span>
             <span className="rounded-full bg-zinc-800 px-3 py-1 text-sm text-zinc-300 capitalize">{program.level}</span>
-            <span className="rounded-full bg-zinc-800 px-3 py-1 text-sm text-zinc-300">{program.price}</span>
           </div>
 
           <div className="mt-6 flex flex-wrap gap-4 text-sm text-zinc-400">
@@ -69,41 +68,25 @@ export default async function TrainingDetailPage({ params }: { params: Params })
         <div className="mx-auto grid max-w-5xl gap-12 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-8">
             <div className="rounded-2xl border border-white/10 bg-black p-6">
-              <h2 className="text-xl font-bold text-white">Silabus</h2>
-              <ul className="mt-4 space-y-3">
-                {program.syllabus.map((item, index) => (
-                  <li key={index} className="flex items-start gap-3 text-zinc-300">
-                    <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-400" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-black p-6">
-              <h2 className="text-xl font-bold text-white">Prasyarat</h2>
-              <p className="mt-2 text-zinc-400">{program.prerequisites}</p>
+              <h2 className="text-xl font-bold text-white">Tentang Pelatihan</h2>
+              <p className="mt-4 text-zinc-300">{program.description}</p>
             </div>
           </div>
 
           <div className="space-y-6">
             <div className="rounded-2xl border border-white/10 bg-black p-6">
-              <h3 className="font-bold text-white">Daftar Pelatihan</h3>
-              <p className="mt-2 text-sm text-zinc-400">Hubungi kami melalui Discord atau form kontak untuk pendaftaran.</p>
+              <h3 className="font-bold text-white">Pelatihan ZCTech</h3>
+              <p className="mt-2 text-sm text-zinc-400">
+                Informasi lengkap, harga, dan pendaftaran ada di website utama ZCTech.
+              </p>
               <a
-                href={siteConfig.socials.discord}
+                href="https://zctech.id"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-4 block w-full rounded-xl bg-emerald-400 py-3 text-center font-bold text-black transition hover:bg-emerald-300"
               >
-                Daftar via Discord
+                Lihat di zctech.id →
               </a>
-              <Link
-                href="/contact"
-                className="mt-3 block w-full rounded-xl border border-white/10 bg-zinc-900 py-3 text-center font-semibold text-white transition hover:bg-zinc-800"
-              >
-                Daftar via Kontak
-              </Link>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-black p-6">

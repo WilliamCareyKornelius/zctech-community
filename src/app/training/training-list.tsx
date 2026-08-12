@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, Clock, Users, Layers } from 'lucide-react';
 import type { Training } from '@/lib/types';
@@ -85,9 +84,6 @@ export function TrainingList({ programs }: { programs: Training[] }) {
                   <span className="rounded-full bg-zinc-800 px-2.5 py-1 text-xs text-zinc-300">
                     {levelLabel[program.level]}
                   </span>
-                  <span className="rounded-full bg-zinc-800 px-2.5 py-1 text-xs text-zinc-300">
-                    {program.price}
-                  </span>
                 </div>
 
                 <h3 className="text-lg font-bold text-white">{program.title}</h3>
@@ -109,9 +105,14 @@ export function TrainingList({ programs }: { programs: Training[] }) {
                 </div>
 
                 <div className="mt-6 flex items-center justify-between">
-                  <Link href={`/training/${program.slug}`} className="text-sm font-semibold text-emerald-400 hover:text-emerald-300">
-                    Lihat silabus →
-                  </Link>
+                  <a
+                    href="https://zctech.id"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-semibold text-emerald-400 hover:text-emerald-300"
+                  >
+                    Lihat di zctech.id →
+                  </a>
                   <BookOpen className="h-5 w-5 text-zinc-600" />
                 </div>
                 </div>
