@@ -16,18 +16,21 @@ export const metadata: Metadata = {
   title: { default: siteConfig.name, template: `%s | ${siteConfig.name}` },
   description: siteConfig.description,
   metadataBase: new URL(siteConfig.url),
+  icons: {
+    icon: '/logo.png',
+  },
   openGraph: {
     title: siteConfig.name,
     description: siteConfig.description,
     type: 'website',
     locale: 'id_ID',
-    images: [{ url: '/kegiatan/img-07.jpg' }],
+    images: [{ url: '/logo.png' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: siteConfig.name,
     description: siteConfig.description,
-    images: [{ url: '/kegiatan/img-07.jpg' }],
+    images: [{ url: '/logo.png' }],
   },
 };
 

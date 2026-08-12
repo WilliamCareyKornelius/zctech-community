@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Shield, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { siteConfig } from '@/lib/content';
 
 const footerLinks = [
@@ -14,9 +14,8 @@ export function Footer() {
     <footer className="border-t border-white/10 bg-black px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-7xl gap-12 md:grid-cols-3">
         <div>
-          <Link href="/" className="flex items-center gap-2 font-bold text-white">
-            <Shield className="h-6 w-6 text-emerald-400" />
-            {siteConfig.name}
+          <Link href="/" className="flex items-center">
+            <img src="/logo.png" alt={siteConfig.name} className="h-10 w-auto rounded-sm bg-white object-contain" />
           </Link>
           <p className="mt-4 max-w-xs text-sm text-zinc-400">{siteConfig.description}</p>
         </div>

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ThemeToggle } from './theme-toggle';
-import { Menu, X, Shield } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { clsx } from 'clsx';
 import { siteConfig } from '@/lib/content';
 
@@ -23,9 +23,8 @@ export function Navbar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-black/60 backdrop-blur-xl">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2 font-bold text-white">
-          <Shield className="h-6 w-6 text-emerald-400" />
-          <span className="hidden sm:inline">{siteConfig.name}</span>
+        <Link href="/" className="flex items-center">
+          <img src="/logo.png" alt={siteConfig.name} className="h-10 w-auto rounded-sm bg-white object-contain" />
         </Link>
 
         <ul className="hidden items-center gap-6 text-sm font-medium text-zinc-300 md:flex">
