@@ -10,13 +10,21 @@ const quotes = [
 ];
 
 export function CommunityVoices() {
-  const testimonials = team.slice(0, 3).map((member, index) => ({
+  const amin = {
+    id: 'Amin',
+    text: quotes[0],
+    name: 'Amin',
+    role: 'Anggota ZCTech Angkatan 24',
+    avatar: { src: '/team/amin.jpg', alt: 'Amin' },
+  };
+
+  const testimonials = [amin, ...team.slice(1, 3).map((member, index) => ({
     id: member.name,
-    text: quotes[index] ?? 'Bergabung bersama ZCTech Community memberikan wawasan dan koneksi yang berharga.',
+    text: quotes[index + 1] ?? 'Bergabung bersama ZCTech Community memberikan wawasan dan koneksi yang berharga.',
     name: member.name,
     role: member.role,
     avatar: { src: member.image, alt: member.name },
-  }));
+  }))];
 
   return (
     <section className="w-full bg-black px-4 py-20 sm:px-6 lg:px-8">
