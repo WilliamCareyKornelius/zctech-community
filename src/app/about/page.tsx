@@ -24,38 +24,38 @@ export default function AboutPage() {
         }}
       />
 
-      <section className="w-full bg-black px-4 pb-16 pt-32 text-center sm:px-6 lg:px-8">
-        <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">Profil Organisasi</span>
-        <h1 className="mx-auto mt-3 max-w-3xl text-4xl font-extrabold text-white sm:text-6xl">
+      <section className="w-full bg-background px-4 pb-16 pt-32 text-center sm:px-6 lg:px-8">
+        <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-300">Profil Organisasi</span>
+        <h1 className="mx-auto mt-3 max-w-3xl text-4xl font-extrabold text-foreground sm:text-6xl">
           Tentang {siteConfig.name}
         </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg text-zinc-400">{siteConfig.description}</p>
+        <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">{siteConfig.description}</p>
       </section>
 
-      <section className="w-full bg-zinc-950 px-4 py-20 sm:px-6 lg:px-8">
+      <section className="w-full bg-muted px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-5xl gap-12 md:grid-cols-2">
           <FadeIn
             direction="left"
-            className="rounded-3xl border border-white/10 bg-black p-8"
+            className="rounded-3xl border border-border bg-background p-8"
           >
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
               <Target className="h-6 w-6" />
             </div>
-            <h2 className="text-2xl font-bold text-white">Visi</h2>
-            <p className="mt-4 text-zinc-400">
+            <h2 className="text-2xl font-bold text-foreground">Visi</h2>
+            <p className="mt-4 text-muted-foreground">
               Menjadi komunitas teknologi terdepan di Indonesia yang membangun ekosistem cybersecurity dan tech talent yang kolaboratif, inklusif, dan memberi dampak positif bagi industri.
             </p>
           </FadeIn>
 
           <FadeIn
             direction="right"
-            className="rounded-3xl border border-white/10 bg-black p-8"
+            className="rounded-3xl border border-border bg-background p-8"
           >
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
               <Shield className="h-6 w-6" />
             </div>
-            <h2 className="text-2xl font-bold text-white">Misi</h2>
-            <ul className="mt-4 list-disc space-y-2 pl-5 text-zinc-400">
+            <h2 className="text-2xl font-bold text-foreground">Misi</h2>
+            <ul className="mt-4 list-disc space-y-2 pl-5 text-muted-foreground">
               <li>Menyediakan wadah belajar berbasis hands-on untuk talenta cybersecurity.</li>
               <li>Mengadakan kegiatan komunitas seperti workshop dan diskusi rutin.</li>
               <li>Membangun jejaring antara praktisi, akademisi, dan industri.</li>
@@ -65,32 +65,32 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="w-full bg-black px-4 py-20 sm:px-6 lg:px-8">
+      <section className="w-full bg-background px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl text-center">
-          <h2 className="text-3xl font-bold text-white sm:text-4xl">Nilai-Nilai Kami</h2>
+          <h2 className="text-3xl font-bold text-foreground sm:text-4xl">Nilai-Nilai Kami</h2>
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {coreValues.map((value, index) => (
               <FadeIn
                 key={value.title}
                 delay={index * 0.1}
-                className="rounded-2xl border border-white/10 bg-zinc-950 p-6 text-left"
+                className="rounded-2xl border border-border bg-muted p-6 text-left"
               >
-                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
+                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
                   {index === 0 ? <Shield className="h-5 w-5" /> : index === 1 ? <Zap className="h-5 w-5" /> : index === 2 ? <Users className="h-5 w-5" /> : <Target className="h-5 w-5" />}
                 </div>
-                <h3 className="text-lg font-bold text-white">{value.title}</h3>
-                <p className="mt-2 text-sm text-zinc-400">{value.description}</p>
+                <h3 className="text-lg font-bold text-foreground">{value.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{value.description}</p>
               </FadeIn>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="w-full bg-zinc-950 px-4 py-20 sm:px-6 lg:px-8">
+      <section className="w-full bg-muted px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-5xl">
-          <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">Perjalanan Kami</span>
-          <h2 className="mt-3 text-3xl font-bold text-white sm:text-4xl">Sejarah Singkat</h2>
-          <div className="mt-8 space-y-4 text-zinc-400">
+          <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-300">Perjalanan Kami</span>
+          <h2 className="mt-3 text-3xl font-bold text-foreground sm:text-4xl">Sejarah Singkat</h2>
+          <div className="mt-8 space-y-4 text-muted-foreground">
             <p>
               ZCTech Community berawal dari grup diskusi kecil yang ingin meningkatkan awareness keamanan siber di kalangan pelajar dan profesional muda Indonesia. Seiring waktu, diskusi berkembang menjadi workshop daring dan meetup luring yang melibatkan banyak anggota.
             </p>
@@ -101,45 +101,45 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="w-full bg-black px-4 py-20 sm:px-6 lg:px-8">
+      <section className="w-full bg-background px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-5xl">
-          <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">Tata Kelola</span>
-          <h2 className="mt-3 text-3xl font-bold text-white sm:text-4xl">Struktur Organisasi</h2>
+          <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-300">Tata Kelola</span>
+          <h2 className="mt-3 text-3xl font-bold text-foreground sm:text-4xl">Struktur Organisasi</h2>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {[
               { title: 'Community Lead', desc: 'Arah strategis dan representasi komunitas', icon: Target },
               { title: 'Program & Kegiatan', desc: 'Kurator topik, mentor, dan jadwal kegiatan komunitas', icon: Users },
               { title: 'Konten & Riset', desc: 'Artikel, sharing session, dan riset keamanan siber', icon: Zap },
             ].map((item) => (
-              <div key={item.title} className="rounded-2xl border border-white/10 bg-zinc-950 p-6 text-center">
-                <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
+              <div key={item.title} className="rounded-2xl border border-border bg-muted p-6 text-center">
+                <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
                   <item.icon className="h-5 w-5" />
                 </div>
-                <h3 className="font-bold text-white">{item.title}</h3>
-                <p className="mt-2 text-sm text-zinc-400">{item.desc}</p>
+                <h3 className="font-bold text-foreground">{item.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{item.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="w-full bg-zinc-950 px-4 py-20 sm:px-6 lg:px-8">
+      <section className="w-full bg-muted px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl text-center">
-          <h2 className="text-3xl font-bold text-white sm:text-4xl">Tim Pengurus Inti</h2>
+          <h2 className="text-3xl font-bold text-foreground sm:text-4xl">Tim Pengurus Inti</h2>
           <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {team.map((member, index) => (
               <FadeIn
                 key={member.name}
                 delay={index * 0.1}
-                className="rounded-2xl border border-white/10 bg-black p-6"
+                className="rounded-2xl border border-border bg-background p-6"
               >
                 <img
                   src={member.image}
                   alt={member.name}
                     className="mx-auto h-24 w-24 rounded-full object-cover"
                 />
-                <h3 className="mt-4 text-lg font-bold text-white">{member.name}</h3>
-                <p className="text-sm text-emerald-400">{member.role}</p>
+                <h3 className="mt-4 text-lg font-bold text-foreground">{member.name}</h3>
+                <p className="text-sm text-emerald-600 dark:text-emerald-300">{member.role}</p>
                 <div className="mt-4 flex justify-center gap-2">
                   {member.socmed.map((s) => (
                     <a
@@ -147,7 +147,7 @@ export default function AboutPage() {
                       href={s.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-zinc-400 hover:text-white"
+                      className="text-xs text-muted-foreground hover:text-foreground"
                     >
                       {s.platform}
                     </a>

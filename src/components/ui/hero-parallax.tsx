@@ -78,7 +78,7 @@ export const HeroParallax = ({
   return (
     <div
       ref={ref}
-      className="min-h-[110vh] overflow-hidden antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d] bg-black"
+      className="min-h-[110vh] overflow-hidden antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d] bg-background"
     >
       <Header />
       <motion.div
@@ -131,18 +131,18 @@ export const Header = () => {
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
           <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
         </span>
-        <span className="text-xs font-mono font-semibold tracking-wider text-emerald-300 uppercase">
+        <span className="text-xs font-mono font-semibold tracking-wider text-emerald-600 dark:text-emerald-300 uppercase">
           Official ZCTech Community Hub
         </span>
       </div>
 
-      <h1 className="text-4xl md:text-7xl font-extrabold text-white leading-[1.1] max-w-4xl tracking-tight drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
+      <h1 className="text-4xl md:text-7xl font-extrabold text-foreground leading-[1.1] max-w-4xl tracking-tight drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
         Pusat Ekosistem <br />
         <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
           Cybersecurity & Tech Talent
         </span>
       </h1>
-      <p className="max-w-2xl text-base md:text-xl mt-6 text-zinc-200 font-normal leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+      <p className="max-w-2xl text-base md:text-xl mt-6 text-foreground font-normal leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
         Wadah terbuka bagi para antusias keamanan siber, pentester, dan pengembang teknologi Indonesia. Mari berbagi wawasan, ikuti kegiatan komunitas, dan tingkatkan keahlian teknis Anda.
       </p>
 
@@ -159,7 +159,7 @@ export const Header = () => {
 
         <a
           href="/events"
-          className="w-full sm:w-auto px-8 py-4 rounded-full bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border border-white/10 font-semibold text-xs transition-all flex items-center justify-center gap-2"
+          className="w-full sm:w-auto px-8 py-4 rounded-full bg-card hover:bg-secondary text-foreground border border-border font-semibold text-xs transition-all flex items-center justify-center gap-2"
         >
           <span>Lihat Kegiatan</span>
         </a>
@@ -189,7 +189,7 @@ export const ProductCard = ({
         y: -10,
       }}
       key={product.title}
-      className="group/product h-64 w-[22rem] sm:h-72 sm:w-[26rem] relative flex-shrink-0 rounded-2xl overflow-hidden border border-white/10 bg-zinc-950 shadow-2xl"
+      className="group/product h-64 w-[22rem] sm:h-72 sm:w-[26rem] relative flex-shrink-0 rounded-2xl overflow-hidden border border-border bg-muted shadow-2xl"
     >
       <a
         href={product.link}
@@ -204,8 +204,8 @@ export const ProductCard = ({
           className="object-cover object-center absolute h-full w-full inset-0 opacity-80 group-hover/product:opacity-100 transition-opacity duration-300"
         />
       </a>
-      <div className="absolute inset-0 h-full w-full opacity-40 bg-black/50 pointer-events-none"></div>
-      <h2 className="font-bold text-white absolute bottom-4 left-4 opacity-0 group-hover/product:opacity-100 transition-opacity duration-300 text-sm z-10">
+      <div className="absolute inset-0 h-full w-full opacity-40 bg-background pointer-events-none"></div>
+      <h2 className="font-bold text-foreground absolute bottom-4 left-4 opacity-0 group-hover/product:opacity-100 transition-opacity duration-300 text-sm z-10">
         {product.title}
       </h2>
     </motion.div>

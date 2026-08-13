@@ -44,7 +44,7 @@ export default function RootLayout({
       <body
         className={clsx(
           inter.className,
-          'min-h-screen bg-white text-zinc-900 antialiased selection:bg-emerald-500 selection:text-white dark:bg-black dark:text-slate-100 overflow-x-hidden'
+          'min-h-screen bg-background text-foreground antialiased selection:bg-emerald-500 selection:text-white overflow-x-hidden'
         )}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

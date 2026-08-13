@@ -12,7 +12,7 @@ const aminTestimonial = {
 
 export function CommunityVoices() {
   return (
-    <section className="w-full bg-zinc-950 px-4 py-20 sm:px-6 lg:px-8">
+    <section className="w-full bg-muted px-4 py-20 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
         <Testimonial1
           badge={{ label: 'Sambutan', variant: 'secondary' }}
@@ -20,7 +20,7 @@ export function CommunityVoices() {
           description="Perjalanan dan harapan komunitas dari pendamping utama kami."
           testimonials={[aminTestimonial]}
           autoplay={false}
-          className="text-white py-0 md:py-0"
+          className="text-foreground py-0 md:py-0"
         />
       </div>
     </section>

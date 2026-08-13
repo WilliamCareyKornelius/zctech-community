@@ -19,7 +19,7 @@ const images = [
 
 export function SkiperGallery() {
   return (
-    <section className="w-full overflow-hidden bg-black px-4 py-24 sm:px-6 lg:px-8">
+    <section className="w-full overflow-hidden bg-background px-4 py-24 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -27,9 +27,9 @@ export function SkiperGallery() {
           viewport={{ once: true }}
           className="text-center"
         >
-          <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">Galeri & Video</span>
-          <h2 className="mt-3 text-3xl font-extrabold text-white sm:text-4xl">Momen Komunitas Kami</h2>
-          <p className="mx-auto mt-4 max-w-2xl text-zinc-400">
+          <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-300">Galeri & Video</span>
+          <h2 className="mt-3 text-3xl font-extrabold text-foreground sm:text-4xl">Momen Komunitas Kami</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
             Dokumentasi kegiatan, meetup, dan workshop ZCTech Community.
           </p>
         </motion.div>
@@ -56,7 +56,7 @@ export function SkiperGallery() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.2 }}
-          className="mt-12 overflow-hidden rounded-3xl border border-white/10 bg-zinc-950"
+          className="mt-12 overflow-hidden rounded-3xl border border-border bg-muted"
         >
           <video
             controls

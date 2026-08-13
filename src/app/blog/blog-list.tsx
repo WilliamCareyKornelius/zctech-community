@@ -24,7 +24,7 @@ export function BlogList({ posts }: { posts: Post[] }) {
   }, [posts, category]);
 
   return (
-    <section className="w-full bg-zinc-950 px-4 py-16 sm:px-6 lg:px-8">
+    <section className="w-full bg-muted px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 flex flex-wrap gap-2">
           {categories.map((c) => (
@@ -34,7 +34,7 @@ export function BlogList({ posts }: { posts: Post[] }) {
               className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
                 category === c
                   ? 'bg-emerald-400 text-black'
-                  : 'border border-white/10 bg-black text-zinc-300 hover:bg-zinc-900'
+                  : 'border border-border bg-background text-muted-foreground hover:bg-card'
               }`}
             >
               {label[c] || c}
@@ -51,7 +51,7 @@ export function BlogList({ posts }: { posts: Post[] }) {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="group flex flex-col rounded-2xl border border-white/10 bg-black p-4"
+                className="group flex flex-col rounded-2xl border border-border bg-background p-4"
               >
                 <Link href={`/blog/${post.slug}`} className="block">
                   <div className="relative h-48 overflow-hidden rounded-xl">
@@ -62,14 +62,14 @@ export function BlogList({ posts }: { posts: Post[] }) {
                     />
                   </div>
                   <div className="mt-4">
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-300">
                       {label[post.category]}
                     </span>
-                    <h3 className="mt-2 text-lg font-bold text-white group-hover:text-emerald-400">
+                    <h3 className="mt-2 text-lg font-bold text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-300">
                       {post.title}
                     </h3>
-                    <p className="mt-2 line-clamp-2 text-sm text-zinc-400">{post.excerpt}</p>
-                    <div className="mt-4 flex items-center gap-3 text-xs text-zinc-500">
+                    <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{post.excerpt}</p>
+                    <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground">
                       <span>{post.author}</span>
                       <span className="inline-flex items-center gap-1">
                         <Clock className="h-3 w-3" />

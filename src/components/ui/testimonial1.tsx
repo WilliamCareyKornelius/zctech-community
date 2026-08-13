@@ -135,7 +135,7 @@ export function Testimonial1({
               </h2>
             )}
             {description && (
-              <p className="mt-4 text-base md:text-lg text-zinc-300">
+              <p className="mt-4 text-base md:text-lg text-muted-foreground">
                 {description}
               </p>
             )}
@@ -165,7 +165,7 @@ export function Testimonial1({
                   <p className="mt-4 text-sm font-medium md:text-lg">
                     {testimonial.name}
                   </p>
-                  <p className="text-sm text-zinc-400 md:text-base">
+                  <p className="text-sm text-muted-foreground md:text-base">
                     {testimonial.role}
                   </p>
                 </div>

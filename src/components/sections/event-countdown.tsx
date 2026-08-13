@@ -41,9 +41,9 @@ function useCountdown(target: string) {
 
 export function EventCountdown() {
   const event = getNearestUpcoming();
-  if (!event) return null;
+  const { days, hours, minutes, seconds } = useCountdown(event?.eventDate ?? '');
 
-  const { days, hours, minutes, seconds } = useCountdown(event.eventDate);
+  if (!event) return null;
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString('id-ID', {
@@ -55,16 +55,16 @@ export function EventCountdown() {
     });
 
   return (
-    <section className="w-full bg-black px-4 py-24 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-4xl rounded-3xl border border-white/10 bg-gradient-to-br from-emerald-950/30 to-black p-8 sm:p-12">
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-300">
+    <section className="w-full bg-background px-4 py-24 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-4xl rounded-3xl border border-border bg-gradient-to-br from-emerald-500/10 to-background p-8 sm:p-12 dark:from-emerald-950/30">
+        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-300">
           <Calendar className="h-3.5 w-3.5" />
           Event Terdekat
         </div>
 
-        <h2 className="text-2xl font-bold text-white sm:text-4xl">{event.title}</h2>
+        <h2 className="text-2xl font-bold text-foreground sm:text-4xl">{event.title}</h2>
 
-        <div className="mt-4 flex flex-wrap items-center gap-4 text-zinc-400">
+        <div className="mt-4 flex flex-wrap items-center gap-4 text-muted-foreground">
           <span className="inline-flex items-center gap-1.5 text-sm">
             <Clock className="h-4 w-4" />
             {formatDate(event.eventDate)}
@@ -84,12 +84,12 @@ export function EventCountdown() {
           ].map((item) => (
             <motion.div
               key={item.label}
-              className="flex flex-col items-center rounded-2xl border border-white/10 bg-zinc-950 p-3 sm:p-5"
+              className="flex flex-col items-center rounded-2xl border border-border bg-muted p-3 sm:p-5"
             >
-              <span className="text-2xl font-extrabold text-emerald-400 sm:text-4xl">
+              <span className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-300 sm:text-4xl">
                 {String(item.value).padStart(2, '0')}
               </span>
-              <span className="mt-1 text-[10px] uppercase tracking-wider text-zinc-500 sm:text-xs">
+              <span className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground sm:text-xs">
                 {item.label}
               </span>
             </motion.div>
@@ -107,7 +107,7 @@ export function EventCountdown() {
           </a>
           <a
             href={`/events/${event.slug}`}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-zinc-900/50 px-6 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-muted px-6 py-3 text-sm font-semibold text-foreground transition hover:bg-secondary"
           >
             Detail Kegiatan
           </a>

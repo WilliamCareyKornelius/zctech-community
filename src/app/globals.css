@@ -76,7 +76,7 @@
 }
 
 .glass-panel {
-  @apply bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl;
+  @apply bg-muted/50 border border-border backdrop-blur-md rounded-2xl;
 }
 
 @theme inline {

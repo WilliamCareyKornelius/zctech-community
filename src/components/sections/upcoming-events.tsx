@@ -19,16 +19,16 @@ export function UpcomingEvents() {
     });
 
   return (
-    <section className="w-full bg-zinc-950 px-4 py-24 sm:px-6 lg:px-8">
+    <section className="w-full bg-muted px-4 py-24 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-12 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">Kegiatan Mendatang</span>
-            <h2 className="mt-2 text-3xl font-bold text-white sm:text-4xl">Jangan Lewatkan</h2>
+            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-300">Kegiatan Mendatang</span>
+            <h2 className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">Jangan Lewatkan</h2>
           </div>
           <Link
             href="/events"
-            className="inline-flex items-center gap-1 text-sm font-medium text-zinc-400 hover:text-white"
+            className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
           >
             Lihat semua kegiatan
             <span className="text-lg">→</span>
@@ -47,26 +47,26 @@ export function UpcomingEvents() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               viewport={{ once: true }}
-              className={`group overflow-hidden rounded-2xl border border-white/10 bg-black ${upcoming.length === 1 ? 'w-full max-w-2xl' : 'w-[85vw] flex-shrink-0 snap-start sm:w-auto'}`}
+              className={`group overflow-hidden rounded-2xl border border-border bg-background ${upcoming.length === 1 ? 'w-full max-w-2xl' : 'w-[85vw] flex-shrink-0 snap-start sm:w-auto'}`}
             >
               <div className="relative h-44 w-full">
                 <img src={event.coverImage} alt={event.title} className="h-full w-full object-cover" />
                 <span
                 className={`absolute right-3 top-3 rounded-full px-2.5 py-1 text-xs font-semibold ${
                   event.status === 'upcoming'
-                    ? 'bg-emerald-500/20 text-emerald-300'
-                    : 'bg-zinc-500/20 text-zinc-300'
+                    ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300'
+                    : 'bg-zinc-500/20 text-muted-foreground'
                 }`}
               >
                 {event.status === 'upcoming' ? 'Upcoming' : 'Completed'}
               </span>
               </div>
               <div className="p-5">
-                <h3 className="text-lg font-bold text-white transition group-hover:text-emerald-400">
+                <h3 className="text-lg font-bold text-foreground transition group-hover:text-emerald-600 dark:group-hover:text-emerald-300">
                   {event.title}
                 </h3>
-                <p className="mt-2 line-clamp-2 text-sm text-zinc-400">{event.description}</p>
-                <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-zinc-500">
+                <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{event.description}</p>
+                <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1">
                     <Calendar className="h-3.5 w-3.5" />
                     {formatDate(event.eventDate)}
@@ -78,7 +78,7 @@ export function UpcomingEvents() {
                 </div>
                 <Link
                   href={`/events/${event.slug}`}
-                  className="mt-5 inline-block text-sm font-semibold text-emerald-400 hover:text-emerald-300"
+                  className="mt-5 inline-block text-sm font-semibold text-emerald-600 hover:text-emerald-500 dark:text-emerald-300 dark:hover:text-emerald-200"
                 >
                   Lihat detail →
                 </Link>

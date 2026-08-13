@@ -7,16 +7,16 @@ export function LatestBlog() {
   const latest = [...posts].sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()).slice(0, 3);
 
   return (
-    <section className="w-full bg-black px-4 py-24 sm:px-6 lg:px-8">
+    <section className="w-full bg-background px-4 py-24 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-12 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">Artikel Terbaru</span>
-            <h2 className="mt-2 text-3xl font-bold text-white sm:text-4xl">Dari Blog Komunitas</h2>
+            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-300">Artikel Terbaru</span>
+            <h2 className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">Dari Blog Komunitas</h2>
           </div>
           <Link
             href="/blog"
-            className="inline-flex items-center gap-1 text-sm font-medium text-zinc-400 hover:text-white"
+            className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
           >
             Lihat semua artikel
             <span className="text-lg">→</span>
@@ -31,7 +31,7 @@ export function LatestBlog() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               viewport={{ once: true }}
-              className="group rounded-2xl border border-white/10 bg-zinc-950 p-4 transition hover:border-white/20"
+              className="group rounded-2xl border border-border bg-muted p-4 transition hover:border-border"
             >
               <Link href={`/blog/${post.slug}`} className="block">
                 <div className="relative h-48 overflow-hidden rounded-xl">
@@ -42,14 +42,14 @@ export function LatestBlog() {
                   />
                 </div>
                 <div className="mt-4">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-300">
                     {post.category}
                   </span>
-                  <h3 className="mt-2 text-lg font-bold text-white group-hover:text-emerald-400">
+                  <h3 className="mt-2 text-lg font-bold text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-300">
                     {post.title}
                   </h3>
-                  <p className="mt-2 line-clamp-2 text-sm text-zinc-400">{post.excerpt}</p>
-                  <div className="mt-4 flex items-center gap-3 text-xs text-zinc-500">
+                  <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{post.excerpt}</p>
+                  <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground">
                     <span>{post.author}</span>
                     <span className="inline-flex items-center gap-1">
                       <Clock className="h-3 w-3" />

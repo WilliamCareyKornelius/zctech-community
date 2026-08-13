@@ -38,35 +38,35 @@ export function ContactForm() {
   return (
     <form onSubmit={handleSubmit} className="mt-6 space-y-4">
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-zinc-300">Nama</label>
+        <label htmlFor="name" className="block text-sm font-medium text-muted-foreground">Nama</label>
         <input
           id="name"
           required
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="mt-1 w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-white outline-none focus:border-emerald-500"
+          className="mt-1 w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground outline-none focus:border-emerald-500"
         />
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-zinc-300">Email</label>
+        <label htmlFor="email" className="block text-sm font-medium text-muted-foreground">Email</label>
         <input
           id="email"
           type="email"
           required
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
-          className="mt-1 w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-white outline-none focus:border-emerald-500"
+          className="mt-1 w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground outline-none focus:border-emerald-500"
         />
       </div>
 
       <div>
-        <label htmlFor="subject" className="block text-sm font-medium text-zinc-300">Subjek</label>
+        <label htmlFor="subject" className="block text-sm font-medium text-muted-foreground">Subjek</label>
         <select
           id="subject"
           value={form.subject}
           onChange={(e) => setForm({ ...form, subject: e.target.value })}
-          className="mt-1 w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-white outline-none focus:border-emerald-500"
+          className="mt-1 w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground outline-none focus:border-emerald-500"
         >
           {subjects.map((s) => (
             <option key={s} value={s}>{s}</option>
@@ -75,14 +75,14 @@ export function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor="message" className="block text-sm font-medium text-zinc-300">Pesan</label>
+        <label htmlFor="message" className="block text-sm font-medium text-muted-foreground">Pesan</label>
         <textarea
           id="message"
           required
           rows={5}
           value={form.message}
           onChange={(e) => setForm({ ...form, message: e.target.value })}
-          className="mt-1 w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-white outline-none focus:border-emerald-500"
+          className="mt-1 w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground outline-none focus:border-emerald-500"
         />
       </div>
 
@@ -95,8 +95,8 @@ export function ContactForm() {
         {status === 'submitting' ? 'Mengirim...' : 'Kirim Pesan'}
       </button>
 
-      {status === 'ok' && <p className="text-sm text-emerald-400">Pesan berhasil dikirim. Kami akan segera merespons.</p>}
-      {status === 'error' && <p className="text-sm text-red-400">Gagal mengirim pesan. Silakan coba lagi.</p>}
+      {status === 'ok' && <p className="text-sm text-emerald-600 dark:text-emerald-300">Pesan berhasil dikirim. Kami akan segera merespons.</p>}
+      {status === 'error' && <p className="text-sm text-destructive">Gagal mengirim pesan. Silakan coba lagi.</p>}
     </form>
   );
 }

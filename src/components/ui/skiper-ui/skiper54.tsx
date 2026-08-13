@@ -63,7 +63,7 @@ const Skiper54 = () => {
     },
   ];
   return (
-    <div className="flex h-full w-screen items-center justify-center overflow-hidden bg-[#f5f4f3]">
+    <div className="flex h-full w-full items-center justify-center overflow-hidden bg-background">
       <Carousel_006
         images={images}
         className=""
@@ -140,7 +140,7 @@ const Carousel_006 = ({
               style={{ willChange: 'clip-path' }}
               className="h-full w-full overflow-hidden rounded-3xl"
             >
-              <div className="relative h-full w-full border">
+              <div className="relative h-full w-full border border-border">
                 <img
                   src={img.src}
                   alt={img.alt}
@@ -155,7 +155,7 @@ const Carousel_006 = ({
                   initial={{ opacity: 0, filter: "blur(10px)" }}
                   animate={{ opacity: 1, filter: "blur(0px)" }}
                   transition={{ duration: 0.5 }}
-                  className="absolute bottom-0 left-2 flex h-[14%] w-full translate-y-full items-center justify-center p-2 text-center font-medium tracking-tight text-black/20"
+                  className="absolute bottom-0 left-2 flex h-[14%] w-full translate-y-full items-center justify-center p-2 text-center font-medium tracking-tight text-muted-foreground/50"
                 >
                   {img.title}
                 </motion.div>
@@ -170,16 +170,16 @@ const Carousel_006 = ({
           <button
             aria-label="Previous slide"
             onClick={() => api?.scrollPrev()}
-            className="rounded-full bg-white/10 p-2"
+            className="rounded-full bg-muted p-2"
           >
-            <ChevronLeft className="text-white" />
+            <ChevronLeft className="text-foreground" />
           </button>
           <button
             aria-label="Next slide"
             onClick={() => api?.scrollNext()}
-            className="rounded-full bg-white/10 p-2"
+            className="rounded-full bg-muted p-2"
           >
-            <ChevronRight className="text-white" />
+            <ChevronRight className="text-foreground" />
           </button>
         </div>
       )}
@@ -193,7 +193,7 @@ const Carousel_006 = ({
                 onClick={() => api?.scrollTo(index)}
                 className={cn(
                   "h-2 w-2 cursor-pointer rounded-full transition-all",
-                  current === index ? "bg-white" : "bg-white/30",
+                  current === index ? "bg-foreground" : "bg-muted-foreground/50",
                 )}
                 aria-label={`Go to slide ${index + 1}`}
               />

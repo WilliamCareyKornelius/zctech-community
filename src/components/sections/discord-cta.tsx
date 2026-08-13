@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { MessageCircle, Users } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { siteConfig } from '@/lib/content';
 
 interface DiscordData {
@@ -12,6 +13,7 @@ interface DiscordData {
 }
 
 export function DiscordCTA() {
+  const { resolvedTheme } = useTheme();
   const [data, setData] = useState<DiscordData>({ memberCount: null, onlineCount: null, guildId: null });
 
   useEffect(() => {
@@ -30,8 +32,8 @@ export function DiscordCTA() {
   }, []);
 
   return (
-    <section className="relative w-full overflow-hidden bg-black px-4 py-24 sm:px-6 lg:px-8">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-900/20 via-black to-black" />
+    <section className="relative w-full overflow-hidden bg-background px-4 py-24 sm:px-6 lg:px-8">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500/10 via-background to-background dark:from-emerald-900/20" />
 
       <motion.div
         initial={{ opacity: 0, y: 24 }}
@@ -39,29 +41,29 @@ export function DiscordCTA() {
         viewport={{ once: true }}
         className="relative mx-auto flex max-w-5xl flex-col items-center text-center"
       >
-        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400">
+        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
           <MessageCircle className="h-8 w-8" />
         </div>
 
-        <h2 className="text-3xl font-bold text-white sm:text-5xl">Gabung Komunitas Discord</h2>
-        <p className="mt-4 max-w-2xl text-zinc-400">
+        <h2 className="text-3xl font-bold text-foreground sm:text-5xl">Gabung Komunitas Discord</h2>
+        <p className="mt-4 max-w-2xl text-muted-foreground">
           Jadilah bagian dari ekosistem talenta cybersecurity Indonesia. Diskusi, tanya jawab, dan ikut event langsung di Discord.
         </p>
 
         <div className="mt-8 flex items-center gap-6">
-          <div className="flex items-center gap-2 text-zinc-300">
-            <Users className="h-5 w-5 text-emerald-400" />
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Users className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
             <span className="font-bold">{data.memberCount ?? '...'}</span>
-            <span className="text-sm text-zinc-500">anggota</span>
+            <span className="text-sm text-muted-foreground">anggota</span>
           </div>
           {data.onlineCount !== null && (
-            <div className="flex items-center gap-2 text-zinc-300">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <span className="relative flex h-2.5 w-2.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
               </span>
               <span className="font-bold">{data.onlineCount}</span>
-              <span className="text-sm text-zinc-500">online</span>
+              <span className="text-sm text-muted-foreground">online</span>
             </div>
           )}
         </div>
@@ -77,9 +79,9 @@ export function DiscordCTA() {
         </a>
 
         {data.guildId && (
-          <div className="mt-8 w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-zinc-950/50 p-2 backdrop-blur">
+          <div className="mt-8 w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-muted p-2 backdrop-blur">
             <iframe
-              src={`https://discord.com/widget?id=${data.guildId}&theme=dark`}
+              src={`https://discord.com/widget?id=${data.guildId}&theme=${resolvedTheme === 'light' ? 'light' : 'dark'}`}
               width="100%"
               height="350"
               sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"

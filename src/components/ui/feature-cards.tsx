@@ -12,7 +12,7 @@ export function FeatureCards() {
       path: '/events',
       linkLabel: 'Lihat Kegiatan',
       desc: 'Gathering rutin, webinar, dan sesi diskusi bersama praktisi industri.',
-      icon: <Calendar className="w-5 h-5 text-zinc-300" />,
+      icon: <Calendar className="w-5 h-5 text-muted-foreground" />,
       tag: 'Regular Agenda',
     },
     {
@@ -20,7 +20,7 @@ export function FeatureCards() {
       path: 'https://discord.gg/s67RfATTBk',
       linkLabel: 'Gabung Discord',
       desc: 'Ruang diskusi, tanya jawab, dan berjejaring bersama anggota ZCTech.',
-      icon: <Users className="w-5 h-5 text-zinc-300" />,
+      icon: <Users className="w-5 h-5 text-muted-foreground" />,
       tag: 'Komunitas',
     },
     {
@@ -28,21 +28,21 @@ export function FeatureCards() {
       path: '/blog',
       linkLabel: 'Baca Blog',
       desc: 'Artikel edukatif, analisis celah keamanan (writeups), dan tutorial teknis.',
-      icon: <BookOpen className="w-5 h-5 text-zinc-300" />,
+      icon: <BookOpen className="w-5 h-5 text-muted-foreground" />,
       tag: 'Technical Writeups',
     },
   ];
 
   return (
-    <section className="w-full bg-zinc-950 py-20 px-4 sm:px-6 lg:px-8 border-b border-zinc-900">
+    <section className="w-full bg-muted py-20 px-4 sm:px-6 lg:px-8 border-b border-border">
       <div className="max-w-7xl mx-auto text-center mb-14">
-        <span className="text-xs font-mono font-semibold tracking-widest text-zinc-400 uppercase">
+        <span className="text-xs font-mono font-semibold tracking-widest text-muted-foreground uppercase">
           Pilar Kami
         </span>
-        <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-white mt-2 mb-3">
+        <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground mt-2 mb-3">
           Pilar Komunitas ZCTech
         </h2>
-        <p className="text-zinc-300 text-xs sm:text-sm max-w-lg mx-auto">
+        <p className="text-muted-foreground text-xs sm:text-sm max-w-lg mx-auto">
           Wadah belajar, berbagi, dan berjejaring bagi para antusias cybersecurity.
         </p>
       </div>
@@ -55,29 +55,29 @@ export function FeatureCards() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: i * 0.08 }}
             viewport={{ once: true }}
-            className="group p-6 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 hover:border-zinc-700 flex flex-col justify-between transition-colors"
+            className="group p-6 rounded-2xl bg-card border border-border hover:border-foreground/20 flex flex-col justify-between transition-colors"
           >
             <div>
-              <div className="w-10 h-10 rounded-lg bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center mb-5">
+              <div className="w-10 h-10 rounded-lg bg-secondary border border-border flex items-center justify-center mb-5">
                 {prog.icon}
               </div>
-              <span className="text-[10px] font-mono font-semibold tracking-wider text-zinc-400 uppercase">
+              <span className="text-[10px] font-mono font-semibold tracking-wider text-muted-foreground uppercase">
                 {prog.tag}
               </span>
-              <h3 className="text-lg font-bold text-zinc-100 mt-1 mb-2">
+              <h3 className="text-lg font-bold text-foreground mt-1 mb-2">
                 {prog.title}
               </h3>
-              <p className="text-xs text-zinc-400 leading-relaxed font-normal">
+              <p className="text-xs text-muted-foreground leading-relaxed font-normal">
                 {prog.desc}
               </p>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-zinc-800/60 flex items-center justify-between">
+            <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
               <Link
                 href={prog.path}
                 target={prog.path.startsWith('http') ? '_blank' : undefined}
                 rel={prog.path.startsWith('http') ? 'noopener noreferrer' : undefined}
-                className="text-xs font-medium text-zinc-300 group-hover:text-white flex items-center gap-1 transition-colors"
+                className="text-xs font-medium text-muted-foreground group-hover:text-foreground flex items-center gap-1 transition-colors"
               >
                 <span>{prog.linkLabel}</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />

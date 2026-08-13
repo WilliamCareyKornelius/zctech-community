@@ -22,12 +22,12 @@ export default function BlogPage() {
         }}
       />
 
-      <section className="w-full bg-black px-4 pb-12 pt-32 text-center sm:px-6 lg:px-8">
-        <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">Blog Komunitas</span>
-        <h1 className="mx-auto mt-3 max-w-3xl text-4xl font-extrabold text-white sm:text-5xl">
+      <section className="w-full bg-background px-4 pb-12 pt-32 text-center sm:px-6 lg:px-8">
+        <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-300">Blog Komunitas</span>
+        <h1 className="mx-auto mt-3 max-w-3xl text-4xl font-extrabold text-foreground sm:text-5xl">
           Artikel & Opini
         </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg text-zinc-400">
+        <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
           Berbagi pengetahuan seputar cybersecurity, programming, dan tren teknologi.
         </p>
       </section>
