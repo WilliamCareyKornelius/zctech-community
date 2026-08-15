@@ -23,9 +23,15 @@ export function Navbar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2">
-          <img src="/logo-icon.png" alt={siteConfig.name} className="h-11 w-auto object-contain" />
-          <span className="hidden text-lg font-bold text-foreground sm:inline">{siteConfig.name}</span>
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <img
+            src="/logo-icon.png"
+            alt={siteConfig.name}
+            className="h-9 w-9 object-contain shrink-0 transition-transform group-hover:scale-105"
+          />
+          <span className="hidden text-lg font-bold tracking-tight text-foreground sm:inline">
+            {siteConfig.name}
+          </span>
         </Link>
 
         <ul className="hidden items-center gap-6 text-sm font-medium text-muted-foreground md:flex">
