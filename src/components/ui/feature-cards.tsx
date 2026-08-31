@@ -25,8 +25,8 @@ export function FeatureCards() {
     },
     {
       title: 'Tech Blog & Insights',
-      path: '/blog',
-      linkLabel: 'Baca Blog',
+      path: 'https://zctech.id/writeups',
+      linkLabel: 'Baca Writeup',
       desc: 'Artikel edukatif, analisis celah keamanan (writeups), dan tutorial teknis.',
       icon: <BookOpen className="w-5 h-5 text-muted-foreground" />,
       tag: 'Technical Writeups',
