@@ -11,6 +11,10 @@ export interface Event {
   type: 'workshop' | 'meetup' | 'webinar' | 'competition';
   status: 'upcoming' | 'ongoing' | 'completed';
   regLink?: string;
+  speaker?: string;
+  price?: string;
+  topics?: string[];
+  benefits?: string[];
 }
 
 export interface Training {

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Calendar, Clock, MapPin, Users } from 'lucide-react';
 import { JsonLd } from '@/components/shared/json-ld';
 import { CopyButton } from '@/components/shared/copy-button';
-import { events, siteConfig } from '@/lib/content';
+import { events, siteConfig, getEventEffectiveStatus } from '@/lib/content';
 
 type Params = Promise<{ slug: string }>;
 
@@ -28,8 +28,12 @@ export default async function EventDetailPage({ params }: { params: Params }) {
   const event = events.find((e) => e.slug === slug);
   if (!event) notFound();
 
+  const effectiveStatus = getEventEffectiveStatus(event);
+  const isCompleted = effectiveStatus === 'completed';
+
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString('id-ID', {
+      weekday: 'long',
       day: 'numeric',
       month: 'long',
       year: 'numeric',
@@ -49,7 +53,7 @@ export default async function EventDetailPage({ params }: { params: Params }) {
           description: event.description,
           startDate: event.eventDate,
           endDate: event.endDate || event.eventDate,
-          eventStatus: event.status === 'completed' ? 'https://schema.org/EventScheduled' : 'https://schema.org/EventScheduled',
+          eventStatus: isCompleted ? 'https://schema.org/EventMovedOnline' : 'https://schema.org/EventScheduled',
           eventAttendanceMode: event.location.toLowerCase().includes('online') ? 'https://schema.org/OnlineEventAttendanceMode' : 'https://schema.org/OfflineEventAttendanceMode',
           location: { '@type': 'Place', name: event.location },
           image: event.coverImage,
@@ -59,69 +63,129 @@ export default async function EventDetailPage({ params }: { params: Params }) {
 
       <section className="w-full bg-background px-4 pb-12 pt-32 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl">
-          <Link href="/events" className="text-sm text-emerald-600 hover:text-emerald-500 dark:text-emerald-300 dark:hover:text-emerald-200">← Kembali ke kegiatan</Link>
-          <h1 className="mt-4 text-3xl font-extrabold text-foreground sm:text-5xl">{event.title}</h1>
+          <Link href="/events" className="text-sm text-emerald-600 hover:text-emerald-500 dark:text-emerald-300 dark:hover:text-emerald-200 font-medium inline-flex items-center gap-1">
+            ← Kembali ke kegiatan
+          </Link>
+          <h1 className={`mt-4 text-3xl font-extrabold sm:text-5xl ${isCompleted ? 'text-muted-foreground' : 'text-foreground'}`}>
+            {event.title}
+          </h1>
 
-          <div className="mt-6 flex flex-wrap gap-4 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1">
-              <Calendar className="h-4 w-4" />
+          <div className="mt-6 flex flex-wrap gap-3 text-sm text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5">
+              <Calendar className="h-4 w-4 text-emerald-500" />
               {formatDate(event.eventDate)}
             </span>
             {event.endDate && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1">
-                <Clock className="h-4 w-4" />
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5">
+                <Clock className="h-4 w-4 text-emerald-500" />
                 Selesai: {formatDate(event.endDate)}
               </span>
             )}
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1">
-              <MapPin className="h-4 w-4" />
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5">
+              <MapPin className="h-4 w-4 text-emerald-500" />
               {event.location}
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 capitalize">
-              <Users className="h-4 w-4" />
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 capitalize">
+              <Users className="h-4 w-4 text-emerald-500" />
               {event.type}
             </span>
+            {event.price && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold px-3.5 py-1.5">
+                {event.price}
+              </span>
+            )}
           </div>
         </div>
       </section>
 
       <section className="w-full bg-muted px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <div className="relative h-64 overflow-hidden rounded-2xl sm:h-80">
-              <img src={event.coverImage} alt={event.title} className="h-full w-full object-cover" />
+          <div className="lg:col-span-2 space-y-8">
+            <div className={`relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm ${
+              isCompleted ? 'filter grayscale opacity-90' : ''
+            }`}>
+              <img src={event.coverImage} alt={event.title} className="w-full h-auto max-h-[520px] object-contain mx-auto bg-black/40" />
             </div>
-            <div className="mt-8 space-y-4 text-muted-foreground">
-              <p className="text-lg leading-relaxed">{event.description}</p>
-              <p className="leading-relaxed">{event.content}</p>
+
+            <div className="space-y-4 rounded-2xl border border-border bg-background p-6 sm:p-8">
+              <h2 className="text-xl font-bold text-foreground">Tentang Kegiatan</h2>
+              <div className="space-y-4 text-muted-foreground whitespace-pre-line leading-relaxed text-sm sm:text-base">
+                {event.content}
+              </div>
             </div>
+
+            {event.topics && event.topics.length > 0 && (
+              <div className="rounded-2xl border border-border bg-background p-6">
+                <h3 className="font-bold text-foreground text-base mb-3">Topik Pembahasan</h3>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
+                  {event.topics.map((topic, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+                      {topic}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           <div className="space-y-6">
             <div className="rounded-2xl border border-border bg-background p-6">
-              <h3 className="font-bold text-foreground">Status</h3>
-              <span
-                className={`mt-2 inline-block rounded-full px-3 py-1 text-sm font-semibold ${
-                  event.status === 'upcoming'
-                    ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300'
-                    : event.status === 'ongoing'
-                    ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300'
-                    : 'bg-zinc-500/20 text-muted-foreground'
-                }`}
-              >
-                {event.status === 'upcoming' ? 'Akan datang' : event.status === 'ongoing' ? 'Sedang berlangsung' : 'Selesai'}
-              </span>
+              <h3 className="font-bold text-foreground text-sm uppercase tracking-wider text-muted-foreground">Status Kegiatan</h3>
+              <div className="mt-3">
+                <span
+                  className={`inline-block rounded-full px-3.5 py-1.5 text-xs font-bold ${
+                    effectiveStatus === 'upcoming'
+                      ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                      : effectiveStatus === 'ongoing'
+                      ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 animate-pulse'
+                      : 'bg-zinc-700/30 text-muted-foreground'
+                  }`}
+                >
+                  {effectiveStatus === 'upcoming'
+                    ? '● Akan Datang'
+                    : effectiveStatus === 'ongoing'
+                    ? '● Sedang Berlangsung'
+                    : '✕ Kegiatan Telah Selesai'}
+                </span>
+              </div>
+              {isCompleted && (
+                <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
+                  Pendaftaran untuk kegiatan ini telah ditutup karena acara sudah terlaksana.
+                </p>
+              )}
             </div>
 
-            {event.regLink && (
+            {event.speaker && (
+              <div className="rounded-2xl border border-border bg-background p-6">
+                <h3 className="font-bold text-foreground text-sm uppercase tracking-wider text-muted-foreground">Pemateri</h3>
+                <p className="mt-2 text-base font-bold text-foreground">{event.speaker}</p>
+              </div>
+            )}
+
+            {event.regLink && !isCompleted && (
               <a
                 href={event.regLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block w-full rounded-xl bg-emerald-400 py-3 text-center font-bold text-black transition hover:bg-emerald-300"
+                className="block w-full rounded-xl bg-emerald-500 py-3.5 text-center font-bold text-white transition hover:bg-emerald-600 shadow-md hover:shadow-emerald-500/20"
               >
-                Daftar Sekarang
+                Daftar Sekarang (Gratis)
               </a>
+            )}
+
+            {event.benefits && event.benefits.length > 0 && (
+              <div className="rounded-2xl border border-border bg-background p-6">
+                <h3 className="font-bold text-foreground text-sm uppercase tracking-wider text-muted-foreground mb-3">Benefit Peserta</h3>
+                <ul className="space-y-2 text-xs sm:text-sm text-muted-foreground">
+                  {event.benefits.map((benefit, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <span className="text-emerald-500 font-bold">✓</span>
+                      {benefit}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
 
             <div className="rounded-2xl border border-border bg-background p-6">
