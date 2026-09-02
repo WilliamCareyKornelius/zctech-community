@@ -3,12 +3,11 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, MapPin } from 'lucide-react';
-import { events, siteConfig } from '@/lib/content';
+import { events, siteConfig, getEventEffectiveStatus } from '@/lib/content';
 
 function getNearestUpcoming() {
-  const now = new Date().getTime();
   return events
-    .filter((e) => new Date(e.eventDate).getTime() > now)
+    .filter((e) => getEventEffectiveStatus(e) !== 'completed')
     .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())[0];
 }
 

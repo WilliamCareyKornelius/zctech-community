@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { EventsList } from './events-list';
+import { EventCountdown } from '@/components/sections/event-countdown';
 import { JsonLd } from '@/components/shared/json-ld';
 import { events, siteConfig } from '@/lib/content';
 
@@ -22,7 +23,7 @@ export default function EventsPage() {
         }}
       />
 
-      <section className="w-full bg-background px-4 pb-12 pt-32 text-center sm:px-6 lg:px-8">
+      <section className="w-full bg-background px-4 pb-8 pt-32 text-center sm:px-6 lg:px-8">
         <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-300">Jadwal Kegiatan</span>
         <h1 className="mx-auto mt-3 max-w-3xl text-4xl font-extrabold text-foreground sm:text-5xl">
           Kegiatan Komunitas
@@ -31,6 +32,8 @@ export default function EventsPage() {
           Kegiatan hands-on untuk belajar cybersecurity bersama anggota ZCTech.
         </p>
       </section>
+
+      <EventCountdown />
 
       <EventsList events={events} />
     </>
