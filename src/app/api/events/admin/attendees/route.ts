@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRegistrations, checkInRegistration } from '@/lib/db';
+import { getRegistrations, checkInRegistration, deleteRegistration } from '@/lib/db';
 
 const VALID_PINS = ['zctech2026', 'amin123', 'admin'];
 
@@ -105,5 +105,42 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Admin check-in error:', error);
     return NextResponse.json({ error: 'Gagal memperbarui check-in.' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: 'Akses ditolak. PIN panitia salah.' }, { status: 401 });
+  }
+
+  try {
+    const { searchParams } = new URL(request.url);
+    let ticketId = searchParams.get('ticketId');
+
+    if (!ticketId) {
+      try {
+        const body = await request.json();
+        ticketId = body.ticketId;
+      } catch {
+        // no body
+      }
+    }
+
+    if (!ticketId) {
+      return NextResponse.json({ error: 'Kode tiket diperlukan.' }, { status: 400 });
+    }
+
+    const success = await deleteRegistration(ticketId);
+    if (!success) {
+      return NextResponse.json({ error: 'Data pendaftar tidak ditemukan.' }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Pendaftaran tiket ${ticketId} berhasil dihapus.`,
+    });
+  } catch (error) {
+    console.error('Delete registration error:', error);
+    return NextResponse.json({ error: 'Gagal menghapus pendaftaran.' }, { status: 500 });
   }
 }

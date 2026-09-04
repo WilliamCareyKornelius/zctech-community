@@ -104,3 +104,20 @@ export async function checkInRegistration(
     alreadyAttended,
   };
 }
+
+// Hapus data pendaftaran peserta berdasarkan ID tiket
+export async function deleteRegistration(id: string): Promise<boolean> {
+  ensureDbExists();
+  const all = await getRegistrations();
+  const filtered = all.filter((r) => r.id.toLowerCase() !== id.toLowerCase());
+
+  if (filtered.length === all.length) {
+    return false;
+  }
+
+  const tempFile = `${DB_FILE}.tmp.${Date.now()}`;
+  await fs.promises.writeFile(tempFile, JSON.stringify(filtered, null, 2), 'utf-8');
+  await fs.promises.rename(tempFile, DB_FILE);
+
+  return true;
+}

@@ -18,6 +18,7 @@ import {
   Mail,
   Phone,
   QrCode,
+  Trash2,
 } from 'lucide-react';
 import type { EventRegistration } from '@/lib/db';
 import { QrScannerModal } from '@/components/events/qr-scanner-modal';
@@ -99,6 +100,30 @@ export default function AdminAttendeesPage() {
       }
     } catch {
       alert('Terjadi kesalahan jaringan.');
+    }
+  };
+
+  const handleDelete = async (ticketId: string, name: string) => {
+    const confirmed = window.confirm(
+      `Apakah Anda yakin ingin menghapus data peserta:\n"${name}" (${ticketId})?\n\nData yang dihapus tidak dapat dipulihkan.`
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`/api/events/admin/attendees?ticketId=${encodeURIComponent(ticketId)}`, {
+        method: 'DELETE',
+        headers: {
+          'x-admin-pin': pin,
+        },
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        fetchData(pin);
+      } else {
+        alert(data.error || 'Gagal menghapus data peserta.');
+      }
+    } catch {
+      alert('Terjadi kesalahan jaringan saat menghapus data.');
     }
   };
 
@@ -385,7 +410,7 @@ export default function AdminAttendeesPage() {
                             {isAttended ? '✓ Hadir' : '● Terkonfirmasi'}
                           </span>
                         </td>
-                        <td className="p-4 text-right space-x-2">
+                        <td className="p-4 text-right space-x-1.5 whitespace-nowrap">
                           {!isAttended && (
                             <button
                               onClick={() => handleManualCheckIn(item.id)}
@@ -397,10 +422,18 @@ export default function AdminAttendeesPage() {
                           <Link
                             href={`/events/verify?ticket=${encodeURIComponent(item.id)}`}
                             target="_blank"
-                            className="rounded-lg border border-border px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                            className="rounded-lg border border-border px-2.5 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted transition inline-flex items-center"
                           >
                             Tiket
                           </Link>
+                          <button
+                            onClick={() => handleDelete(item.id, item.fullName)}
+                            className="rounded-lg border border-destructive/30 px-2 py-1 text-[11px] font-medium text-destructive hover:bg-destructive/10 transition inline-flex items-center gap-1"
+                            title="Hapus Data Peserta"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            Hapus
+                          </button>
                         </td>
                       </tr>
                     );
