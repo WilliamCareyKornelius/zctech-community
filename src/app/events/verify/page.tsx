@@ -3,7 +3,18 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle2, AlertCircle, Calendar, MapPin, User, Building, QrCode, ArrowLeft, Camera } from 'lucide-react';
+import {
+  CheckCircle2,
+  AlertCircle,
+  Calendar,
+  MapPin,
+  QrCode,
+  ArrowLeft,
+  Camera,
+  Lock,
+  Clock,
+  X,
+} from 'lucide-react';
 import type { EventRegistration } from '@/lib/db';
 
 function TicketVerifyContent() {
@@ -13,8 +24,18 @@ function TicketVerifyContent() {
   const [loading, setLoading] = useState(true);
   const [registration, setRegistration] = useState<EventRegistration | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Committee check-in states
+  const [adminPin, setAdminPin] = useState<string>('');
+  const [showPinModal, setShowPinModal] = useState<boolean>(false);
+  const [pinInput, setPinInput] = useState<string>('');
+  const [pinError, setPinError] = useState<string | null>(null);
   const [checkInLoading, setCheckInLoading] = useState(false);
-  const [checkInSuccess, setCheckInSuccess] = useState(false);
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem('zctech_admin_pin');
+    if (saved) setAdminPin(saved);
+  }, []);
 
   useEffect(() => {
     if (!ticketId) {
@@ -35,24 +56,30 @@ function TicketVerifyContent() {
       .finally(() => setLoading(false));
   }, [ticketId]);
 
-  const handleCheckIn = async () => {
+  const handleCheckIn = async (pinToUse: string) => {
     if (!registration) return;
     setCheckInLoading(true);
+    setPinError(null);
     try {
       const res = await fetch('/api/events/verify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticketId: registration.id }),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': pinToUse,
+        },
+        body: JSON.stringify({ ticketId: registration.id, pin: pinToUse }),
       });
       const data = await res.json();
-      if (data.success && data.registration) {
+      if (res.ok && data.success && data.registration) {
         setRegistration(data.registration);
-        setCheckInSuccess(true);
+        setAdminPin(pinToUse);
+        sessionStorage.setItem('zctech_admin_pin', pinToUse);
+        setShowPinModal(false);
       } else {
-        alert(data.error || 'Gagal memproses check-in.');
+        setPinError(data.error || 'PIN Panitia salah.');
       }
     } catch {
-      alert('Terjadi kesalahan jaringan.');
+      setPinError('Terjadi kesalahan jaringan.');
     } finally {
       setCheckInLoading(false);
     }
@@ -205,20 +232,61 @@ function TicketVerifyContent() {
             </div>
           </div>
 
-          {/* Check-in action button for committee */}
+          {/* Status Kehadiran & Petunjuk Peserta */}
           {!isAttended ? (
-            <div className="pt-4">
-              <button
-                onClick={handleCheckIn}
-                disabled={checkInLoading}
-                className="w-full rounded-xl bg-emerald-500 py-3 text-center text-sm font-bold text-black shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-400 disabled:opacity-50"
-              >
-                {checkInLoading ? 'Memproses Check-In...' : '✓ Konfirmasi Kehadiran Peserta (Panitia)'}
-              </button>
+            <div className="pt-2 space-y-3">
+              <div className="rounded-2xl border border-border bg-muted/40 p-4 text-center space-y-1">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-500">
+                  <Clock className="h-3.5 w-3.5" />
+                  Status: Menunggu Check-In di Lokasi
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed pt-1">
+                  Tunjukkan QR Code di atas kepada panitia di meja registrasi saat tiba di lokasi acara.
+                </p>
+              </div>
+
+              {/* Opsi khusus panitia */}
+              <div className="text-center pt-1">
+                {adminPin ? (
+                  <button
+                    onClick={() => handleCheckIn(adminPin)}
+                    disabled={checkInLoading}
+                    className="w-full rounded-xl bg-emerald-500 py-3 text-center text-xs font-bold text-black shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-400 disabled:opacity-50"
+                  >
+                    {checkInLoading ? 'Memproses Check-In...' : '✓ Konfirmasi Kehadiran Peserta (Mode Panitia Aktif)'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPinError(null);
+                      setPinInput('');
+                      setShowPinModal(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-emerald-500 transition py-1"
+                  >
+                    <Lock className="h-3 w-3" />
+                    <span>Panitia? Klik untuk Konfirmasi Kehadiran</span>
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
-            <div className="rounded-xl bg-blue-500/10 border border-blue-500/30 p-3 text-center text-xs text-blue-500 font-bold">
-              ✓ Peserta ini telah check-in pada {registration.checkedInAt ? new Date(registration.checkedInAt).toLocaleTimeString('id-ID') : 'hari ini'}.
+            <div className="rounded-2xl bg-blue-500/10 border border-blue-500/30 p-4 text-center text-xs text-blue-400 font-bold space-y-1">
+              <div className="flex items-center justify-center gap-1.5 text-blue-400">
+                <CheckCircle2 className="h-4 w-4" />
+                <span>E-Tiket Telah Digunakan (Checked-In)</span>
+              </div>
+              <p className="text-[11px] font-normal text-muted-foreground">
+                Tercatat hadir pada{' '}
+                {registration.checkedInAt
+                  ? new Date(registration.checkedInAt).toLocaleTimeString('id-ID', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  : 'hari ini'}
+                . Selamat mengikuti acara!
+              </p>
             </div>
           )}
         </div>
@@ -230,6 +298,61 @@ function TicketVerifyContent() {
           </Link>
         </div>
       </div>
+
+      {/* Modal Masukkan PIN Panitia */}
+      {showPinModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
+              <div className="flex items-center gap-2 text-foreground font-black text-sm">
+                <Lock className="h-4 w-4 text-emerald-500" />
+                <span>Konfirmasi Panitia</span>
+              </div>
+              <button
+                onClick={() => setShowPinModal(false)}
+                className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-muted-foreground mt-3">
+              Masukkan PIN Panitia untuk mencatat kehadiran peserta <strong>{registration.fullName}</strong>.
+            </p>
+
+            {pinError && (
+              <div className="mt-3 rounded-xl border border-destructive/30 bg-destructive/10 p-2.5 text-xs text-destructive text-center">
+                {pinError}
+              </div>
+            )}
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (pinInput.trim()) handleCheckIn(pinInput.trim());
+              }}
+              className="mt-4 space-y-3"
+            >
+              <input
+                type="password"
+                required
+                autoFocus
+                value={pinInput}
+                onChange={(e) => setPinInput(e.target.value)}
+                placeholder="Masukkan PIN Panitia"
+                className="w-full rounded-xl border border-border bg-muted/50 px-3.5 py-2.5 text-xs text-foreground focus:border-emerald-500 focus:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={checkInLoading || !pinInput.trim()}
+                className="w-full rounded-xl bg-emerald-500 py-2.5 text-xs font-bold text-black hover:bg-emerald-400 transition disabled:opacity-50"
+              >
+                {checkInLoading ? 'Memverifikasi...' : 'Konfirmasi Kehadiran'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

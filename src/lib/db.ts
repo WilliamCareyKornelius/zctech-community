@@ -105,6 +105,18 @@ export async function checkInRegistration(
   };
 }
 
+// Reset / batalkan status check-in kembali ke 'confirmed'
+export async function resetCheckInRegistration(id: string): Promise<EventRegistration | null> {
+  const all = await getRegistrations();
+  const target = all.find((r) => r.id.toLowerCase() === id.toLowerCase());
+  if (!target) return null;
+
+  target.status = 'confirmed';
+  delete target.checkedInAt;
+  await saveRegistration(target);
+  return target;
+}
+
 // Hapus data pendaftaran peserta berdasarkan ID tiket
 export async function deleteRegistration(id: string): Promise<boolean> {
   ensureDbExists();

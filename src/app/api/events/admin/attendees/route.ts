@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRegistrations, checkInRegistration, deleteRegistration } from '@/lib/db';
+import { getRegistrations, checkInRegistration, deleteRegistration, resetCheckInRegistration } from '@/lib/db';
 
 const VALID_PINS = ['zctech2026', 'amin123', 'admin'];
 
@@ -86,10 +86,22 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { ticketId } = body;
+    const { ticketId, action } = body;
 
     if (!ticketId) {
       return NextResponse.json({ error: 'Kode tiket diperlukan.' }, { status: 400 });
+    }
+
+    if (action === 'reset') {
+      const reset = await resetCheckInRegistration(ticketId);
+      if (!reset) {
+        return NextResponse.json({ error: 'Tiket tidak ditemukan.' }, { status: 404 });
+      }
+      return NextResponse.json({
+        success: true,
+        message: `Status kehadiran peserta ${reset.fullName} berhasil dibatalkan (reset).`,
+        registration: reset,
+      });
     }
 
     const updated = await checkInRegistration(ticketId);

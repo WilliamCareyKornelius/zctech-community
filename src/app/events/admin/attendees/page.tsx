@@ -103,6 +103,32 @@ export default function AdminAttendeesPage() {
     }
   };
 
+  const handleResetCheckIn = async (ticketId: string, name: string) => {
+    const confirmed = window.confirm(
+      `Batalkan status check-in untuk "${name}" (${ticketId}) dan ubah kembali menjadi Belum Hadir?`
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch('/api/events/admin/attendees', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': pin,
+        },
+        body: JSON.stringify({ ticketId, action: 'reset' }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchData(pin);
+      } else {
+        alert(data.error || 'Gagal mereset status check-in.');
+      }
+    } catch {
+      alert('Terjadi kesalahan jaringan.');
+    }
+  };
+
   const handleDelete = async (ticketId: string, name: string) => {
     const confirmed = window.confirm(
       `Apakah Anda yakin ingin menghapus data peserta:\n"${name}" (${ticketId})?\n\nData yang dihapus tidak dapat dipulihkan.`
@@ -411,12 +437,20 @@ export default function AdminAttendeesPage() {
                           </span>
                         </td>
                         <td className="p-4 text-right space-x-1.5 whitespace-nowrap">
-                          {!isAttended && (
+                          {!isAttended ? (
                             <button
                               onClick={() => handleManualCheckIn(item.id)}
                               className="rounded-lg bg-emerald-500 px-2.5 py-1 text-[11px] font-bold text-black hover:bg-emerald-400 transition"
                             >
                               Check-In
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleResetCheckIn(item.id, item.fullName)}
+                              className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-500 hover:bg-amber-500/20 transition"
+                              title="Batalkan status Hadir kembali ke Belum Hadir"
+                            >
+                              Batal Hadir
                             </button>
                           )}
                           <Link
