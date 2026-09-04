@@ -78,7 +78,7 @@ export const events: Event[] = [
     location: 'Aula Kampus Politani Samarinda',
     type: 'meetup',
     status: 'upcoming',
-    regLink: 'https://forms.gle/xg1ueErFjeQZQU6aA',
+    regLink: '/events/tech-future-expo-2026/register',
     speaker: 'Muhammad Kevin Adli Pratama',
     price: 'GRATIS untuk Umum',
     topics: ['Cybersecurity Seminar', 'Live Ethical Hacking Demo', 'Smart Agriculture (IoT)'],

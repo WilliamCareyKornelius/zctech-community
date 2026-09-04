@@ -164,14 +164,23 @@ export default async function EventDetailPage({ params }: { params: Params }) {
             )}
 
             {event.regLink && !isCompleted && (
-              <a
-                href={event.regLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full rounded-xl bg-emerald-500 py-3.5 text-center font-bold text-white transition hover:bg-emerald-600 shadow-md hover:shadow-emerald-500/20"
-              >
-                Daftar Sekarang (Gratis)
-              </a>
+              event.regLink.startsWith('http') ? (
+                <a
+                  href={event.regLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full rounded-xl bg-emerald-500 py-3.5 text-center font-bold text-white transition hover:bg-emerald-600 shadow-md hover:shadow-emerald-500/20"
+                >
+                  Daftar Sekarang (Gratis)
+                </a>
+              ) : (
+                <Link
+                  href={event.regLink}
+                  className="block w-full rounded-xl bg-emerald-500 py-3.5 text-center font-bold text-white transition hover:bg-emerald-600 shadow-md hover:shadow-emerald-500/20"
+                >
+                  Daftar Sekarang (Gratis)
+                </Link>
+              )
             )}
 
             {event.benefits && event.benefits.length > 0 && (

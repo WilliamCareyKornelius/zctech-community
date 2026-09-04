@@ -175,16 +175,27 @@ export function EventPopup() {
               {/* Action Buttons (Mobile First: stacked & tap-friendly) */}
               <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
                 {activeEvent.regLink && (
-                  <a
-                    href={activeEvent.regLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={handleClose}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3.5 text-sm font-bold text-black shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-400 active:scale-[0.98] text-center"
-                  >
-                    <span>Daftar Sekarang (Gratis)</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </a>
+                  activeEvent.regLink.startsWith('http') ? (
+                    <a
+                      href={activeEvent.regLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={handleClose}
+                      className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3.5 text-sm font-bold text-black shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-400 active:scale-[0.98] text-center"
+                    >
+                      <span>Daftar Sekarang (Gratis)</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </a>
+                  ) : (
+                    <Link
+                      href={activeEvent.regLink}
+                      onClick={handleClose}
+                      className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3.5 text-sm font-bold text-black shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-400 active:scale-[0.98] text-center"
+                    >
+                      <span>Daftar Sekarang (Gratis)</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  )
                 )}
                 <Link
                   href={`/events/${activeEvent.slug}`}

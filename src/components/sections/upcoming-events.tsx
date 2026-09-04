@@ -111,14 +111,23 @@ export function UpcomingEvents() {
                       Lihat detail →
                     </Link>
                     {event.regLink && !isCompleted && (
-                      <a
-                        href={event.regLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-600"
-                      >
-                        Daftar Gratis
-                      </a>
+                      event.regLink.startsWith('http') ? (
+                        <a
+                          href={event.regLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-600"
+                        >
+                          Daftar Gratis
+                        </a>
+                      ) : (
+                        <Link
+                          href={event.regLink}
+                          className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-600"
+                        >
+                          Daftar Gratis
+                        </Link>
+                      )
                     )}
                   </div>
                 </div>
