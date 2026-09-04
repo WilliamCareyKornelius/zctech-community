@@ -227,12 +227,12 @@ export function generateTravelokaTicketHtml(reg: EventRegistration): string {
 
       <!-- QR Code Section -->
       <div class="qr-container">
-        <img src="${reg.qrCodeDataUrl}" alt="QR Code Tiket" class="qr-image" />
+        <img src="cid:ticket_qrcode" alt="QR Code Tiket: ${reg.id}" width="170" height="170" class="qr-image" style="display: inline-block; width: 170px; height: 170px; border: 6px solid #f8fafc; border-radius: 12px;" />
         <div class="qr-hint">
           Tunjukkan QR Code ini kepada panitia saat check-in registrasi ulang di lokasi.
         </div>
-        <div>
-          <a href="${verifyUrl}" target="_blank" class="btn-verify">Buka Tiket di Web</a>
+        <div style="margin-top: 14px;">
+          <a href="${verifyUrl}" target="_blank" class="btn-verify">Buka Tiket & QR di Web &rarr;</a>
         </div>
       </div>
 
@@ -321,11 +321,25 @@ export async function sendEventTicketEmail(registration: EventRegistration): Pro
   try {
     const htmlContent = generateTravelokaTicketHtml(registration);
 
+    // Extract base64 image data to buffer for inline CID attachment (Gmail compliant)
+    const qrBase64 = registration.qrCodeDataUrl.includes(',')
+      ? registration.qrCodeDataUrl.split(',')[1]
+      : registration.qrCodeDataUrl;
+    const qrBuffer = Buffer.from(qrBase64, 'base64');
+
     const mailOptions = {
       from: SMTP_FROM,
       to: registration.email,
       subject: `[E-Tiket Resmi] Bukti Pendaftaran ${registration.eventTitle} - ${registration.id}`,
       html: htmlContent,
+      attachments: [
+        {
+          filename: `qrcode-${registration.id}.png`,
+          content: qrBuffer,
+          cid: 'ticket_qrcode',
+          contentType: 'image/png',
+        },
+      ],
     };
 
     const info = await transporter.sendMail(mailOptions);
