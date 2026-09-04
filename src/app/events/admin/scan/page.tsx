@@ -18,10 +18,11 @@ import {
   ArrowLeft,
   Users,
   Clock,
+  ArrowRight,
 } from 'lucide-react';
 import type { EventRegistration } from '@/lib/db';
 
-// Audio Synthesizer Feedback
+// Suara Beep Ramah & Lembut
 function playBeep(type: 'success' | 'warning' | 'error') {
   try {
     const AudioCtx =
@@ -31,43 +32,52 @@ function playBeep(type: 'success' | 'warning' | 'error') {
     const ctx = new AudioCtx();
 
     if (type === 'success') {
-      const osc = ctx.createOscillator();
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.08);
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
-      osc.connect(gain);
+
+      osc1.type = 'sine';
+      osc2.type = 'sine';
+      osc1.frequency.setValueAtTime(523.25, ctx.currentTime);
+      osc2.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08);
+
+      gain.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
       gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.2);
-      if (navigator.vibrate) navigator.vibrate(80);
+
+      osc1.start(ctx.currentTime);
+      osc1.stop(ctx.currentTime + 0.15);
+      osc2.start(ctx.currentTime + 0.08);
+      osc2.stop(ctx.currentTime + 0.35);
+
+      if (navigator.vibrate) navigator.vibrate(60);
     } else if (type === 'warning') {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(440, ctx.currentTime);
-      osc.frequency.setValueAtTime(330, ctx.currentTime + 0.1);
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(370, ctx.currentTime);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start();
       osc.stop(ctx.currentTime + 0.25);
-      if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
+      if (navigator.vibrate) navigator.vibrate([40, 40]);
     } else {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'sawtooth';
+      osc.type = 'triangle';
       osc.frequency.setValueAtTime(220, ctx.currentTime);
-      gain.gain.setValueAtTime(0.4, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start();
       osc.stop(ctx.currentTime + 0.3);
-      if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
     }
   } catch {
     // Ignore audio error
@@ -75,19 +85,27 @@ function playBeep(type: 'success' | 'warning' | 'error') {
 }
 
 function extractTicketId(rawText: string): string {
+  if (!rawText) return '';
   const trimmed = rawText.trim();
   try {
+    if (trimmed.includes('ticket=')) {
+      const parts = trimmed.split('ticket=');
+      if (parts[1]) {
+        const id = parts[1].split('&')[0].split('#')[0];
+        return decodeURIComponent(id).trim().toUpperCase();
+      }
+    }
     if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
       const url = new URL(trimmed);
       const ticketParam = url.searchParams.get('ticket');
-      if (ticketParam) return ticketParam.trim();
+      if (ticketParam) return ticketParam.trim().toUpperCase();
     }
   } catch {
-    // fallback to regex
+    // fallback
   }
   const match = trimmed.match(/ZCT-[A-Za-z0-9-_]+/i);
   if (match) return match[0].toUpperCase();
-  return trimmed;
+  return trimmed.toUpperCase();
 }
 
 export default function AdminScanPage() {
@@ -117,8 +135,11 @@ export default function AdminScanPage() {
   // Manual input
   const [manualTicket, setManualTicket] = useState('');
 
+  // Anti-loop refs
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
-  const isScanningRef = useRef<boolean>(false);
+  const isBusyRef = useRef<boolean>(false);
+  const lastScannedTicketRef = useRef<string>('');
+  const lastScannedTimestampRef = useRef<number>(0);
   const resumeTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check saved PIN
@@ -152,14 +173,39 @@ export default function AdminScanPage() {
     }
   };
 
+  const resumeScanning = useCallback(() => {
+    if (resumeTimerRef.current) {
+      clearTimeout(resumeTimerRef.current);
+      resumeTimerRef.current = null;
+    }
+    setCurrentResult(null);
+    isBusyRef.current = false;
+
+    if (html5QrCodeRef.current) {
+      try {
+        const state = html5QrCodeRef.current.getState();
+        if (state === 3) {
+          html5QrCodeRef.current.resume();
+        }
+      } catch (e) {
+        console.warn('Resume error:', e);
+      }
+    }
+  }, []);
+
   const stopCamera = useCallback(async () => {
     if (resumeTimerRef.current) {
       clearTimeout(resumeTimerRef.current);
       resumeTimerRef.current = null;
     }
-    if (html5QrCodeRef.current && isScanningRef.current) {
+    isBusyRef.current = false;
+
+    if (html5QrCodeRef.current) {
       try {
-        await html5QrCodeRef.current.stop();
+        const state = html5QrCodeRef.current.getState();
+        if (state === 2 || state === 3) {
+          await html5QrCodeRef.current.stop();
+        }
       } catch (err) {
         console.warn('Stop camera err:', err);
       }
@@ -168,7 +214,7 @@ export default function AdminScanPage() {
       } catch {
         // ignore
       }
-      isScanningRef.current = false;
+      html5QrCodeRef.current = null;
     }
     setCameraActive(false);
   }, []);
@@ -178,13 +224,42 @@ export default function AdminScanPage() {
       const ticketId = extractTicketId(rawTicket);
       if (!ticketId) return;
 
+      const now = Date.now();
+      // Cegah scan berulang pada tiket yang sama dalam 8 detik
+      if (
+        lastScannedTicketRef.current === ticketId &&
+        now - lastScannedTimestampRef.current < 8000
+      ) {
+        return;
+      }
+
+      isBusyRef.current = true;
+      lastScannedTicketRef.current = ticketId;
+      lastScannedTimestampRef.current = now;
+
+      // Pause kamera
+      if (html5QrCodeRef.current) {
+        try {
+          const state = html5QrCodeRef.current.getState();
+          if (state === 2) {
+            html5QrCodeRef.current.pause(true);
+          }
+        } catch {
+          // ignore
+        }
+      }
+
       setIsProcessing(true);
+      const effectivePin =
+        pin ||
+        (typeof window !== 'undefined' ? sessionStorage.getItem('zctech_admin_pin') || '' : '');
+
       try {
         const res = await fetch('/api/events/admin/attendees', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-admin-pin': pin,
+            'x-admin-pin': effectivePin,
           },
           body: JSON.stringify({ ticketId }),
         });
@@ -207,7 +282,7 @@ export default function AdminScanPage() {
             if (soundEnabled) playBeep('success');
             setCurrentResult({
               status: 'success',
-              message: `✓ Check-in Berhasil: ${reg.fullName}`,
+              message: `✓ Berhasil Check-In: ${reg.fullName}`,
               registration: reg,
             });
             setStats((prev) => ({ ...prev, attended: prev.attended + 1 }));
@@ -231,25 +306,25 @@ export default function AdminScanPage() {
 
         if (autoNext) {
           resumeTimerRef.current = setTimeout(() => {
-            setCurrentResult(null);
-            isScanningRef.current = true;
-          }, 2500);
+            resumeScanning();
+          }, 3200);
         }
       }
     },
-    [pin, soundEnabled, autoNext]
+    [pin, soundEnabled, autoNext, resumeScanning]
   );
 
   const startCamera = useCallback(async () => {
     setCameraError(null);
     setCurrentResult(null);
+    isBusyRef.current = false;
 
     try {
       const containerId = 'fullscreen-qr-reader';
       const containerEl = document.getElementById(containerId);
       if (!containerEl) return;
 
-      if (html5QrCodeRef.current && isScanningRef.current) {
+      if (html5QrCodeRef.current) {
         await stopCamera();
       }
 
@@ -262,7 +337,7 @@ export default function AdminScanPage() {
       await html5QrCode.start(
         { facingMode },
         {
-          fps: 15,
+          fps: 10,
           qrbox: (w, h) => {
             const minEdge = Math.min(w, h);
             const size = Math.floor(minEdge * 0.72);
@@ -271,14 +346,12 @@ export default function AdminScanPage() {
           aspectRatio: 1.0,
         },
         (decodedText) => {
-          if (!isScanningRef.current) return;
-          isScanningRef.current = false;
+          if (isBusyRef.current) return;
           processTicket(decodedText);
         },
         () => {}
       );
 
-      isScanningRef.current = true;
       setCameraActive(true);
     } catch (err: unknown) {
       console.error('Camera start error:', err);
@@ -296,7 +369,7 @@ export default function AdminScanPage() {
     if (isUnlocked) {
       const timer = setTimeout(() => {
         startCamera();
-      }, 300);
+      }, 250);
       return () => {
         clearTimeout(timer);
         stopCamera();
@@ -387,8 +460,7 @@ export default function AdminScanPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
-                  const next = facingMode === 'environment' ? 'user' : 'environment';
-                  setFacingMode(next);
+                  setFacingMode((prev) => (prev === 'environment' ? 'user' : 'environment'));
                 }}
                 className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted text-muted-foreground hover:text-foreground transition"
                 title="Ganti Kamera"
@@ -448,7 +520,7 @@ export default function AdminScanPage() {
 
             {/* Scan result overlay */}
             {currentResult && (
-              <div className="absolute inset-x-4 bottom-4 z-30 animate-in slide-in-from-bottom-3 duration-200">
+              <div className="absolute inset-x-3 bottom-3 z-30 animate-in slide-in-from-bottom-3 duration-200">
                 <div
                   className={`rounded-2xl border p-4 shadow-2xl backdrop-blur-xl ${
                     currentResult.status === 'success'
@@ -470,7 +542,7 @@ export default function AdminScanPage() {
                     )}
 
                     <div className="flex-1 min-w-0 text-xs">
-                      <p className="font-extrabold text-sm">{currentResult.message}</p>
+                      <p className="font-black text-sm">{currentResult.message}</p>
                       {currentResult.registration && (
                         <div className="mt-1 space-y-0.5 opacity-90">
                           <p>
@@ -488,15 +560,15 @@ export default function AdminScanPage() {
                     </div>
                   </div>
 
-                  <div className="mt-3 flex justify-end">
+                  <div className="mt-3 flex items-center justify-between pt-2 border-t border-white/10">
+                    <span className="text-[10px] opacity-75">
+                      {autoNext ? 'Lanjut otomatis dalam 3 detik...' : 'Siap tiket berikutnya'}
+                    </span>
                     <button
-                      onClick={() => {
-                        setCurrentResult(null);
-                        isScanningRef.current = true;
-                      }}
-                      className="rounded-xl bg-white/20 px-3 py-1 text-xs font-bold text-white hover:bg-white/30"
+                      onClick={resumeScanning}
+                      className="inline-flex items-center gap-1 rounded-xl bg-white/20 px-3 py-1 text-xs font-bold text-white hover:bg-white/30"
                     >
-                      Scan Berikutnya →
+                      Scan Berikutnya <ArrowRight className="h-3 w-3" />
                     </button>
                   </div>
                 </div>
@@ -516,7 +588,7 @@ export default function AdminScanPage() {
                 />
                 <span className="font-bold flex items-center gap-1 text-[11px] text-muted-foreground">
                   <Zap className="h-3 w-3 text-emerald-500" />
-                  Auto-Lanjut (2.5s)
+                  Auto-Lanjut (3s)
                 </span>
               </label>
 

@@ -14,6 +14,7 @@ import {
   VolumeX,
   Search,
   FlipHorizontal,
+  ArrowRight,
 } from 'lucide-react';
 import type { EventRegistration } from '@/lib/db';
 
@@ -24,86 +25,104 @@ interface QrScannerModalProps {
   onCheckInSuccess?: (reg: EventRegistration) => void;
 }
 
-// Audio Feedback synthesiser (Web Audio API)
+// Suara Beep Ramah & Elegan (Web Audio API)
 function playScanSound(type: 'success' | 'warning' | 'error') {
   try {
-    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const AudioCtx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!AudioCtx) return;
     const ctx = new AudioCtx();
 
     if (type === 'success') {
+      // Suara lonceng lembut kasir (C5 -> E5)
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc1.type = 'sine';
+      osc2.type = 'sine';
+      osc1.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+      osc2.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08); // E5
+
+      gain.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc1.start(ctx.currentTime);
+      osc1.stop(ctx.currentTime + 0.15);
+      osc2.start(ctx.currentTime + 0.08);
+      osc2.stop(ctx.currentTime + 0.35);
+
+      if (navigator.vibrate) navigator.vibrate(60);
+    } else if (type === 'warning') {
+      // Peringatan nada lembut tunggal
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.08); // A5
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.2);
-      if (navigator.vibrate) navigator.vibrate(80);
-    } else if (type === 'warning') {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(440, ctx.currentTime);
-      osc.frequency.setValueAtTime(330, ctx.currentTime + 0.1);
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+      osc.frequency.setValueAtTime(370, ctx.currentTime);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start();
       osc.stop(ctx.currentTime + 0.25);
-      if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
+      if (navigator.vibrate) navigator.vibrate([40, 40]);
     } else {
+      // Nada error
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'sawtooth';
+      osc.type = 'triangle';
       osc.frequency.setValueAtTime(220, ctx.currentTime);
-      gain.gain.setValueAtTime(0.4, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start();
       osc.stop(ctx.currentTime + 0.3);
-      if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
     }
   } catch {
-    // Ignore audio permission/context errors
+    // Audio tidak didukung / dibatasi
   }
 }
 
-// Ekstrak ticket ID dari URL atau teks mentah
+// Ekstrak ID Tiket secara akurat
 function extractTicketId(rawText: string): string {
+  if (!rawText) return '';
   const trimmed = rawText.trim();
-  // Cek apakah format URL: ?ticket=ZCT-...
   try {
+    if (trimmed.includes('ticket=')) {
+      const parts = trimmed.split('ticket=');
+      if (parts[1]) {
+        const id = parts[1].split('&')[0].split('#')[0];
+        return decodeURIComponent(id).trim().toUpperCase();
+      }
+    }
     if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
       const url = new URL(trimmed);
       const ticketParam = url.searchParams.get('ticket');
-      if (ticketParam) return ticketParam.trim();
+      if (ticketParam) return ticketParam.trim().toUpperCase();
     }
   } catch {
-    // bukan URL valid, fallback ke regex
+    // fallback
   }
-
-  // Cek regex pola ZCT-XXXX
   const match = trimmed.match(/ZCT-[A-Za-z0-9-_]+/i);
   if (match) return match[0].toUpperCase();
-
-  return trimmed;
+  return trimmed.toUpperCase();
 }
 
 export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrScannerModalProps) {
   const [cameraActive, setCameraActive] = useState(false);
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [autoCheckIn, setAutoCheckIn] = useState(true);
+  const [autoNext, setAutoNext] = useState(true);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
-  // Status hasil scan
+  // Status hasil pemindaian
   const [isProcessing, setIsProcessing] = useState(false);
   const [scanResult, setScanResult] = useState<{
     status: 'success' | 'warning' | 'error';
@@ -111,50 +130,110 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
     registration?: EventRegistration;
   } | null>(null);
 
-  // Manual input fallback
   const [manualTicketInput, setManualTicketInput] = useState('');
 
+  // Refs penting untuk mencegah bug perulangan (looping / re-scan)
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
-  const isScanningRef = useRef<boolean>(false);
+  const isBusyRef = useRef<boolean>(false);
+  const lastScannedTicketRef = useRef<string>('');
+  const lastScannedTimestampRef = useRef<number>(0);
   const resumeTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Stop camera
+  // Fungsi melanjutkan scan berikutnya (Unpause camera)
+  const resumeScanning = useCallback(() => {
+    if (resumeTimerRef.current) {
+      clearTimeout(resumeTimerRef.current);
+      resumeTimerRef.current = null;
+    }
+    setScanResult(null);
+    isBusyRef.current = false;
+
+    // Resume Html5Qrcode jika sedang paused
+    if (html5QrCodeRef.current) {
+      try {
+        const state = html5QrCodeRef.current.getState();
+        // State 3 = PAUSED
+        if (state === 3) {
+          html5QrCodeRef.current.resume();
+        }
+      } catch (e) {
+        console.warn('Resume error:', e);
+      }
+    }
+  }, []);
+
+  // Hentikan kamera dan reset
   const stopCamera = useCallback(async () => {
     if (resumeTimerRef.current) {
       clearTimeout(resumeTimerRef.current);
       resumeTimerRef.current = null;
     }
-    if (html5QrCodeRef.current && isScanningRef.current) {
+    isBusyRef.current = false;
+
+    if (html5QrCodeRef.current) {
       try {
-        await html5QrCodeRef.current.stop();
+        const state = html5QrCodeRef.current.getState();
+        // State 2 = SCANNING, 3 = PAUSED
+        if (state === 2 || state === 3) {
+          await html5QrCodeRef.current.stop();
+        }
       } catch (err) {
-        console.warn('Error stopping html5QrCode:', err);
+        console.warn('Stop error:', err);
       }
       try {
         html5QrCodeRef.current.clear();
       } catch {
         // ignore
       }
-      isScanningRef.current = false;
+      html5QrCodeRef.current = null;
     }
     setCameraActive(false);
   }, []);
 
-  // Proses kode tiket
+  // Proses validasi dan check-in tiket
   const processTicket = useCallback(
     async (rawTicket: string) => {
       const ticketId = extractTicketId(rawTicket);
       if (!ticketId) return;
 
+      const now = Date.now();
+      // CEGAH SCAN BERULANG: Jika tiket sama persis baru saja di-scan dalam 8 detik terakhir, abaikan!
+      if (
+        lastScannedTicketRef.current === ticketId &&
+        now - lastScannedTimestampRef.current < 8000
+      ) {
+        return;
+      }
+
+      // Kunci scanner agar tidak memproses frame video lain
+      isBusyRef.current = true;
+      lastScannedTicketRef.current = ticketId;
+      lastScannedTimestampRef.current = now;
+
+      // Segera PAUSE kamera agar frame berikutnya tidak dibaca berulang
+      if (html5QrCodeRef.current) {
+        try {
+          const state = html5QrCodeRef.current.getState();
+          if (state === 2) {
+            html5QrCodeRef.current.pause(true);
+          }
+        } catch {
+          // ignore
+        }
+      }
+
       setIsProcessing(true);
 
+      const effectivePin =
+        pin ||
+        (typeof window !== 'undefined' ? sessionStorage.getItem('zctech_admin_pin') || '' : '');
+
       try {
-        // Lakukan check-in via API admin
         const res = await fetch('/api/events/admin/attendees', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-admin-pin': pin,
+            'x-admin-pin': effectivePin,
           },
           body: JSON.stringify({ ticketId }),
         });
@@ -175,7 +254,7 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
             if (soundEnabled) playScanSound('success');
             setScanResult({
               status: 'success',
-              message: `Berhasil check-in: ${reg.fullName}`,
+              message: `✓ Berhasil Check-In: ${reg.fullName}`,
               registration: reg,
             });
             if (onCheckInSuccess) {
@@ -186,7 +265,7 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
           if (soundEnabled) playScanSound('error');
           setScanResult({
             status: 'error',
-            message: data.error || `Tiket [${ticketId}] tidak valid / tidak ditemukan.`,
+            message: data.error || `Tiket [${ticketId}] tidak valid.`,
           });
         }
       } catch {
@@ -198,30 +277,29 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
       } finally {
         setIsProcessing(false);
 
-        // Jika autoCheckIn aktif, lanjutkan scan otomatis setelah 2.5 detik
-        if (autoCheckIn) {
+        // Jika autoNext aktif, tunggu 3 detik baru buka scanner lagi
+        if (autoNext) {
           resumeTimerRef.current = setTimeout(() => {
-            setScanResult(null);
-            isScanningRef.current = true;
-          }, 2500);
+            resumeScanning();
+          }, 3200);
         }
       }
     },
-    [pin, soundEnabled, autoCheckIn, onCheckInSuccess]
+    [pin, soundEnabled, autoNext, onCheckInSuccess, resumeScanning]
   );
 
-  // Start camera
+  // Inisialisasi dan jalankan kamera
   const startCamera = useCallback(async () => {
     setCameraError(null);
     setScanResult(null);
+    isBusyRef.current = false;
 
     try {
       const containerId = 'interactive-qr-reader';
       const containerEl = document.getElementById(containerId);
       if (!containerEl) return;
 
-      // Stop previous instance if exists
-      if (html5QrCodeRef.current && isScanningRef.current) {
+      if (html5QrCodeRef.current) {
         await stopCamera();
       }
 
@@ -234,7 +312,7 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
       await html5QrCode.start(
         { facingMode },
         {
-          fps: 15,
+          fps: 10,
           qrbox: (viewfinderWidth, viewfinderHeight) => {
             const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
             const qrboxSize = Math.floor(minEdge * 0.72);
@@ -246,17 +324,13 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
           aspectRatio: 1.0,
         },
         (decodedText) => {
-          // Hanya tangkap jika tidak sedang memproses atau jeda
-          if (!isScanningRef.current) return;
-          isScanningRef.current = false;
+          // Hanya izinkan pemrosesan jika scanner sedang tidak sibuk
+          if (isBusyRef.current) return;
           processTicket(decodedText);
         },
-        () => {
-          // Frame scanner misses/in-progress, no action needed
-        }
+        () => {}
       );
 
-      isScanningRef.current = true;
       setCameraActive(true);
     } catch (err: unknown) {
       console.error('Camera start error:', err);
@@ -277,17 +351,18 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
     if (isOpen) {
       const timer = setTimeout(() => {
         startCamera();
-      }, 300);
-      return () => clearTimeout(timer);
+      }, 250);
+      return () => {
+        clearTimeout(timer);
+        stopCamera();
+      };
     } else {
       stopCamera();
     }
   }, [isOpen, startCamera, stopCamera]);
 
-  // Ganti kamera Depan / Belakang
   const toggleFacingMode = () => {
-    const nextMode = facingMode === 'environment' ? 'user' : 'environment';
-    setFacingMode(nextMode);
+    setFacingMode((prev) => (prev === 'environment' ? 'user' : 'environment'));
   };
 
   if (!isOpen) return null;
@@ -295,15 +370,15 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-md animate-in fade-in duration-200">
       <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-emerald-500/30 bg-card shadow-2xl">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-border bg-muted/40 px-5 py-4">
-          <div className="flex items-center gap-2">
+        {/* Header Modal */}
+        <div className="flex items-center justify-between border-b border-border bg-muted/40 px-5 py-3.5">
+          <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
               <Camera className="h-5 w-5" />
             </div>
             <div>
               <h2 className="text-sm font-black text-foreground">Scanner QR Tiket Peserta</h2>
-              <p className="text-[11px] text-muted-foreground">Arahkan kamera ke QR Code tiket di layar HP peserta</p>
+              <p className="text-[11px] text-muted-foreground">Arahkan kamera ke QR Code tiket peserta</p>
             </div>
           </div>
           <button
@@ -318,17 +393,14 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
         </div>
 
         {/* Viewfinder Camera Area */}
-        <div className="relative bg-black aspect-square max-h-[380px] w-full overflow-hidden flex items-center justify-center">
-          {/* HTML5 QR Code Mount Div */}
+        <div className="relative bg-black aspect-square max-h-[360px] w-full overflow-hidden flex items-center justify-center">
           <div id="interactive-qr-reader" className="h-full w-full object-cover" />
 
-          {/* Animated Laser Overlay ketika kamera aktif & tidak ada popup error */}
+          {/* Laser Overlay (Hanya muncul jika kamera aktif & tidak sedang menampilkan pop-up hasil) */}
           {cameraActive && !scanResult && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="relative h-60 w-60 sm:h-64 sm:w-64 rounded-2xl border-2 border-dashed border-emerald-400/70 shadow-[0_0_25px_rgba(16,185,129,0.3)]">
-                {/* Laser scan line animation */}
+              <div className="relative h-60 w-60 rounded-2xl border-2 border-dashed border-emerald-400/80 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
                 <div className="absolute inset-x-2 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_10px_#10b981] animate-bounce duration-1000" />
-                {/* Corner Accents */}
                 <div className="absolute -top-1 -left-1 h-5 w-5 border-t-4 border-l-4 border-emerald-400 rounded-tl" />
                 <div className="absolute -top-1 -right-1 h-5 w-5 border-t-4 border-r-4 border-emerald-400 rounded-tr" />
                 <div className="absolute -bottom-1 -left-1 h-5 w-5 border-b-4 border-l-4 border-emerald-400 rounded-bl" />
@@ -337,77 +409,84 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
             </div>
           )}
 
-          {/* Error state */}
+          {/* Pesan Error Akses Kamera */}
           {cameraError && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-card/95 p-6 text-center z-10">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-destructive/10 text-destructive mb-3">
                 <AlertCircle className="h-6 w-6" />
               </div>
-              <p className="text-sm font-bold text-foreground mb-1">Kamera Tidak Dapat Diakses</p>
+              <p className="text-sm font-bold text-foreground mb-1">Kamera Tidak Dapat Dibuka</p>
               <p className="text-xs text-muted-foreground mb-4 max-w-xs">{cameraError}</p>
               <button
                 onClick={startCamera}
                 className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-black hover:bg-emerald-400"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
-                Coba Lagi
+                Coba Nyalakan Lagi
               </button>
             </div>
           )}
 
-          {/* Loading / Processing Indicator */}
+          {/* Loading Indicator saat verifikasi ke server */}
           {isProcessing && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm z-20">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/85 backdrop-blur-sm z-20">
               <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent mb-3" />
-              <p className="text-xs font-bold text-emerald-400">Memverifikasi & Menyimpan Kehadiran...</p>
+              <p className="text-xs font-bold text-emerald-400">Menyimpan Kehadiran...</p>
             </div>
           )}
 
-          {/* Scan Result Card Overlay */}
+          {/* Hasil Scan Pop-Up yang Bersih dan Jelas */}
           {scanResult && (
-            <div className="absolute inset-x-4 bottom-4 z-30 animate-in slide-in-from-bottom-5 duration-300">
+            <div className="absolute inset-x-3 bottom-3 z-30 animate-in slide-in-from-bottom-3 duration-200">
               <div
                 className={`rounded-2xl border p-4 shadow-2xl backdrop-blur-xl ${
                   scanResult.status === 'success'
-                    ? 'border-emerald-500/50 bg-emerald-950/90 text-emerald-100'
+                    ? 'border-emerald-500 bg-emerald-950/95 text-emerald-100'
                     : scanResult.status === 'warning'
-                    ? 'border-amber-500/50 bg-amber-950/90 text-amber-100'
-                    : 'border-destructive/50 bg-destructive/90 text-white'
+                    ? 'border-amber-500 bg-amber-950/95 text-amber-100'
+                    : 'border-destructive bg-destructive/95 text-white'
                 }`}
               >
                 <div className="flex items-start gap-3">
                   <div className="shrink-0 mt-0.5">
-                    {scanResult.status === 'success' && <CheckCircle2 className="h-6 w-6 text-emerald-400" />}
-                    {scanResult.status === 'warning' && <AlertTriangle className="h-6 w-6 text-amber-400" />}
+                    {scanResult.status === 'success' && (
+                      <CheckCircle2 className="h-6 w-6 text-emerald-400" />
+                    )}
+                    {scanResult.status === 'warning' && (
+                      <AlertTriangle className="h-6 w-6 text-amber-400" />
+                    )}
                     {scanResult.status === 'error' && <AlertCircle className="h-6 w-6 text-white" />}
                   </div>
                   <div className="flex-1 min-w-0 text-xs">
-                    <p className="font-extrabold text-sm">{scanResult.message}</p>
+                    <p className="font-black text-sm">{scanResult.message}</p>
                     {scanResult.registration && (
-                      <div className="mt-1.5 space-y-0.5 opacity-90">
+                      <div className="mt-1 space-y-0.5 opacity-90">
                         <p>
                           <span className="opacity-75">Nama:</span>{' '}
                           <strong className="text-white">{scanResult.registration.fullName}</strong>
                         </p>
                         <p>
-                          <span className="opacity-75">Instansi:</span> {scanResult.registration.institution} (
-                          {scanResult.registration.category})
+                          <span className="opacity-75">Instansi:</span>{' '}
+                          {scanResult.registration.institution} ({scanResult.registration.category})
                         </p>
-                        <p className="font-mono text-[11px] opacity-80">Tiket: {scanResult.registration.id}</p>
+                        <p className="font-mono text-[11px] opacity-75">
+                          ID: {scanResult.registration.id}
+                        </p>
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div className="mt-3 flex items-center justify-end gap-2">
+                {/* Tombol Lanjut Scan Berikutnya */}
+                <div className="mt-3 flex items-center justify-between pt-2 border-t border-white/10">
+                  <span className="text-[10px] opacity-75">
+                    {autoNext ? 'Lanjut otomatis dalam 3 detik...' : 'Siap untuk tiket berikutnya'}
+                  </span>
                   <button
-                    onClick={() => {
-                      setScanResult(null);
-                      isScanningRef.current = true;
-                    }}
-                    className="rounded-xl bg-white/20 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-white/30 active:scale-95 transition"
+                    onClick={resumeScanning}
+                    className="inline-flex items-center gap-1 rounded-xl bg-white/20 px-3 py-1.5 text-xs font-bold text-white hover:bg-white/30 active:scale-95 transition"
                   >
-                    Scan Tiket Berikutnya →
+                    Scan Tiket Berikutnya <ArrowRight className="h-3 w-3" />
                   </button>
                 </div>
               </div>
@@ -415,7 +494,7 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
           )}
         </div>
 
-        {/* Toolbar Controls */}
+        {/* Toolbar Pengaturan */}
         <div className="border-t border-border bg-card p-4 space-y-3">
           <div className="flex items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2">
@@ -444,51 +523,49 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
               </button>
             </div>
 
-            <label className="flex items-center gap-2 cursor-pointer select-none">
+            <label className="flex items-center gap-1.5 cursor-pointer select-none">
               <input
                 type="checkbox"
-                checked={autoCheckIn}
-                onChange={(e) => setAutoCheckIn(e.target.checked)}
+                checked={autoNext}
+                onChange={(e) => setAutoNext(e.target.checked)}
                 className="h-4 w-4 rounded accent-emerald-500"
               />
               <span className="text-[11px] font-bold text-foreground flex items-center gap-1">
                 <Zap className="h-3 w-3 text-emerald-500" />
-                Auto-Next (2.5s)
+                Auto-Lanjut
               </span>
             </label>
           </div>
 
-          {/* Manual Ticket Input Fallback */}
-          <div className="pt-1 border-t border-border/60">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (manualTicketInput.trim()) {
-                  processTicket(manualTicketInput.trim());
-                  setManualTicketInput('');
-                }
-              }}
-              className="flex gap-2"
+          {/* Form Input Manual jika QR Code buram / rusak */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (manualTicketInput.trim()) {
+                processTicket(manualTicketInput.trim());
+                setManualTicketInput('');
+              }
+            }}
+            className="flex gap-2 pt-1 border-t border-border/50"
+          >
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <input
+                type="text"
+                value={manualTicketInput}
+                onChange={(e) => setManualTicketInput(e.target.value)}
+                placeholder="Ketik manual ID Tiket (misal: ZCT-EXP-...)"
+                className="w-full rounded-xl border border-border bg-muted/40 pl-8 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-emerald-500 focus:outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={!manualTicketInput.trim() || isProcessing}
+              className="rounded-xl bg-emerald-500 px-3.5 py-2 text-xs font-bold text-black hover:bg-emerald-400 disabled:opacity-50 transition shrink-0"
             >
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <input
-                  type="text"
-                  value={manualTicketInput}
-                  onChange={(e) => setManualTicketInput(e.target.value)}
-                  placeholder="Ketik manual ID Tiket (misal: ZCT-EXP-2026-...)"
-                  className="w-full rounded-xl border border-border bg-muted/40 pl-8 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-emerald-500 focus:outline-none"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={!manualTicketInput.trim() || isProcessing}
-                className="rounded-xl bg-emerald-500 px-3.5 py-2 text-xs font-bold text-black hover:bg-emerald-400 disabled:opacity-50 transition shrink-0"
-              >
-                Cek Manual
-              </button>
-            </form>
-          </div>
+              Cek
+            </button>
+          </form>
         </div>
       </div>
     </div>
