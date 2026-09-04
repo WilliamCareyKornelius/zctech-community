@@ -133,3 +133,34 @@
     @apply font-sans;
   }
 }
+
+/* QR Scanner Camera Feed Display Fixes */
+#fullscreen-qr-reader,
+#interactive-qr-reader {
+  position: relative !important;
+  width: 100% !important;
+  min-height: 280px !important;
+  overflow: hidden !important;
+}
+
+#fullscreen-qr-reader video,
+#interactive-qr-reader video {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 280px !important;
+  max-height: 480px !important;
+  object-fit: cover !important;
+  display: block !important;
+  background-color: transparent !important;
+}
+
+/* Sembunyikan shaded-region gelap bawaan library agar tidak menutupi kamera */
+#fullscreen-qr-reader #qr-shaded-region,
+#interactive-qr-reader #qr-shaded-region {
+  display: none !important;
+}
+
+#fullscreen-qr-reader canvas#qr-canvas,
+#interactive-qr-reader canvas#qr-canvas {
+  display: none !important;
+}

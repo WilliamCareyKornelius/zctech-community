@@ -344,6 +344,9 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
         await stopCamera();
       }
 
+      // Bersihkan isi container sebelum mulai
+      containerEl.innerHTML = '';
+
       // Utamakan decoding QR Code saja untuk efisiensi CPU dan akurasi instan
       const html5QrCode = new Html5Qrcode(containerId, {
         formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
@@ -351,52 +354,90 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
       });
       html5QrCodeRef.current = html5QrCode;
 
-      // Konfigurasi target kamera
-      const cameraConfig: string | { facingMode: string } = selectedCameraId
-        ? selectedCameraId
-        : { facingMode };
-
+      // Konfigurasi scan tanpa qrbox agar tidak ada shading region hitam yang menutupi video
       const scanConfig = {
-        fps: 12,
-        qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
-          const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-          const qrboxSize = Math.floor(minEdge * 0.72);
-          return {
-            width: Math.max(qrboxSize, 200),
-            height: Math.max(qrboxSize, 200),
-          };
-        },
+        fps: 15,
       };
 
+      let started = false;
+
+      // 1. Coba kamera yang dipilih atau facingMode saat ini
       try {
+        const primaryConfig: string | { facingMode: string } = selectedCameraId
+          ? selectedCameraId
+          : { facingMode };
+
         await html5QrCode.start(
-          cameraConfig,
+          primaryConfig,
           scanConfig,
           (decodedText) => {
             processTicketRef.current?.(decodedText);
           },
           () => {} // silent on normal empty frames
         );
+        started = true;
       } catch (firstErr) {
-        console.warn('Primary camera target failed, trying available camera fallback:', firstErr);
-        const cameras = await Html5Qrcode.getCameras();
-        if (cameras && cameras.length > 0) {
+        console.warn('Primary camera target failed, trying facingMode fallback:', firstErr);
+      }
+
+      // 2. Jika gagal (misal facingMode environment di laptop/desktop), coba facingMode sebaliknya
+      if (!started && !selectedCameraId) {
+        try {
+          const altFacing = facingMode === 'environment' ? 'user' : 'environment';
           await html5QrCode.start(
-            cameras[0].id,
+            { facingMode: altFacing },
             scanConfig,
             (decodedText) => {
               processTicketRef.current?.(decodedText);
             },
             () => {}
           );
-        } else {
-          throw firstErr;
+          started = true;
+          setFacingMode(altFacing);
+        } catch (secondErr) {
+          console.warn('Alt facingMode failed, trying deviceId enumerate fallback:', secondErr);
+        }
+      }
+
+      // 3. Jika masih belum berhasil, ambil daftar videoinput via navigator.mediaDevices (aman tanpa mematikan stream)
+      if (!started) {
+        try {
+          if (navigator?.mediaDevices?.enumerateDevices) {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoInputs = devices.filter((d) => d.kind === 'videoinput');
+            if (videoInputs.length > 0) {
+              await html5QrCode.start(
+                videoInputs[0].deviceId,
+                scanConfig,
+                (decodedText) => {
+                  processTicketRef.current?.(decodedText);
+                },
+                () => {}
+              );
+              started = true;
+            }
+          }
+        } catch (thirdErr) {
+          console.error('All camera attempts failed:', thirdErr);
+          throw thirdErr;
         }
       }
 
       setCameraActive(true);
 
-      // Cek fitur senter / torch
+      // Force video element to play & support inline playback for iOS Safari & Android
+      const videoEl = containerEl.querySelector('video');
+      if (videoEl) {
+        videoEl.setAttribute('playsinline', 'true');
+        videoEl.setAttribute('webkit-playsinline', 'true');
+        videoEl.setAttribute('autoplay', 'true');
+        videoEl.muted = true;
+        if (videoEl.paused) {
+          videoEl.play().catch(() => {});
+        }
+      }
+
+      // Cek fitur senter / torch HP
       try {
         const caps = html5QrCode.getRunningTrackCameraCapabilities();
         if (
@@ -415,16 +456,19 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
         setTorchSupported(false);
       }
 
-      // Ambil daftar kamera setelah izin aktif untuk dropdown
+      // Ambil daftar kamera via enumerateDevices (read-only, zero-track-closing)
       try {
-        const devices = await Html5Qrcode.getCameras();
-        if (devices && devices.length > 0) {
-          setAvailableCameras(
-            devices.map((d, i) => ({
-              id: d.id,
-              label: d.label || `Kamera ${i + 1}`,
-            }))
-          );
+        if (navigator?.mediaDevices?.enumerateDevices) {
+          const allDevices = await navigator.mediaDevices.enumerateDevices();
+          const vInputs = allDevices.filter((d) => d.kind === 'videoinput');
+          if (vInputs.length > 0) {
+            setAvailableCameras(
+              vInputs.map((d, i) => ({
+                id: d.deviceId,
+                label: d.label || `Kamera ${i + 1}`,
+              }))
+            );
+          }
         }
       } catch {
         // ignore device listing error
@@ -517,10 +561,10 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
         </div>
 
         {/* Viewfinder Camera Area */}
-        <div className="relative bg-black w-full overflow-hidden flex items-center justify-center min-h-[300px] max-h-[380px]">
+        <div className="relative bg-black w-full overflow-hidden flex items-center justify-center min-h-[320px] max-h-[420px]">
           <div
             id="interactive-qr-reader"
-            className="w-full flex items-center justify-center [&_video]:max-h-[380px] [&_video]:w-full [&_video]:object-contain"
+            className="w-full h-full min-h-[320px] flex items-center justify-center"
           />
 
           {/* Target Frame Overlay dengan Respons Flash Berwarna */}
