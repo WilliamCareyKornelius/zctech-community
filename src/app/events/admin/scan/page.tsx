@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import {
   Camera,
   CheckCircle2,
@@ -116,6 +116,8 @@ export default function AdminScanPage() {
   // Scanner state
   const [cameraActive, setCameraActive] = useState(false);
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
+  const [availableCameras, setAvailableCameras] = useState<Array<{ id: string; label: string }>>([]);
+  const [selectedCameraId, setSelectedCameraId] = useState<string>('');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [autoNext, setAutoNext] = useState(true);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -215,10 +217,10 @@ export default function AdminScanPage() {
       if (!ticketId) return;
 
       const now = Date.now();
-      // Cegah scan berulang pada tiket yang sama dalam 5 detik
+      // Cegah scan berulang pada tiket yang sama dalam 7 detik
       if (
         lastScannedTicketRef.current === ticketId &&
-        now - lastScannedTimestampRef.current < 5000
+        now - lastScannedTimestampRef.current < 7000
       ) {
         return;
       }
@@ -292,6 +294,11 @@ export default function AdminScanPage() {
     [pin, soundEnabled, autoNext, resumeScanning]
   );
 
+  const processTicketRef = useRef(processTicket);
+  useEffect(() => {
+    processTicketRef.current = processTicket;
+  });
+
   const startCamera = useCallback(async () => {
     setCameraError(null);
     setCurrentResult(null);
@@ -307,59 +314,70 @@ export default function AdminScanPage() {
       }
 
       const html5QrCode = new Html5Qrcode(containerId, {
-        experimentalFeatures: {
-          useBarCodeDetectorIfSupported: true,
-        },
+        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
         verbose: false,
       });
       html5QrCodeRef.current = html5QrCode;
 
-      let cameraIdOrConfig: string | { facingMode: string } = { facingMode };
+      const cameraConfig: string | { facingMode: string } = selectedCameraId
+        ? selectedCameraId
+        : { facingMode };
+
+      const scanConfig = {
+        fps: 10,
+        qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+          const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+          const qrboxSize = Math.floor(minEdge * 0.72);
+          return {
+            width: Math.max(qrboxSize, 200),
+            height: Math.max(qrboxSize, 200),
+          };
+        },
+      };
+
       try {
+        await html5QrCode.start(
+          cameraConfig,
+          scanConfig,
+          (decodedText) => {
+            if (isBusyRef.current) return;
+            processTicketRef.current?.(decodedText);
+          },
+          () => {}
+        );
+      } catch (firstErr) {
+        console.warn('Primary camera start failed, trying first available device:', firstErr);
         const cameras = await Html5Qrcode.getCameras();
         if (cameras && cameras.length > 0) {
-          if (facingMode === 'environment') {
-            const backCam = cameras.find(
-              (c) =>
-                c.label.toLowerCase().includes('back') ||
-                c.label.toLowerCase().includes('rear') ||
-                c.label.toLowerCase().includes('environment') ||
-                c.label.toLowerCase().includes('belakang')
-            );
-            if (backCam) {
-              cameraIdOrConfig = backCam.id;
-            } else if (cameras.length > 1) {
-              cameraIdOrConfig = cameras[cameras.length - 1].id;
-            }
-          } else {
-            const frontCam = cameras.find(
-              (c) =>
-                c.label.toLowerCase().includes('front') ||
-                c.label.toLowerCase().includes('user') ||
-                c.label.toLowerCase().includes('depan')
-            );
-            if (frontCam) {
-              cameraIdOrConfig = frontCam.id;
-            }
-          }
+          await html5QrCode.start(
+            cameras[0].id,
+            scanConfig,
+            (decodedText) => {
+              if (isBusyRef.current) return;
+              processTicketRef.current?.(decodedText);
+            },
+            () => {}
+          );
+        } else {
+          throw firstErr;
         }
-      } catch {
-        // fallback
       }
 
-      await html5QrCode.start(
-        cameraIdOrConfig,
-        {
-          fps: 15,
-        },
-        (decodedText) => {
-          if (isBusyRef.current) return;
-          processTicket(decodedText);
-        },
-        () => {}
-      );
-
       setCameraActive(true);
+
+      try {
+        const devices = await Html5Qrcode.getCameras();
+        if (devices && devices.length > 0) {
+          setAvailableCameras(
+            devices.map((d, i) => ({
+              id: d.id,
+              label: d.label || `Kamera ${i + 1}`,
+            }))
+          );
+        }
+      } catch {
+        // ignore
+      }
     } catch (err: unknown) {
       console.error('Camera start error:', err);
       const msg = err instanceof Error ? err.message : String(err);
@@ -370,7 +388,7 @@ export default function AdminScanPage() {
       }
       setCameraActive(false);
     }
-  }, [facingMode, stopCamera, processTicket]);
+  }, [facingMode, selectedCameraId, stopCamera]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -379,7 +397,7 @@ export default function AdminScanPage() {
     setIsProcessing(true);
     try {
       const decodedText = await html5QrCodeRef.current.scanFile(file, false);
-      processTicket(decodedText);
+      processTicketRef.current?.(decodedText);
     } catch {
       alert('QR Code tidak terdeteksi pada gambar yang dipilih.');
     } finally {
@@ -485,16 +503,32 @@ export default function AdminScanPage() {
               </h2>
               <p className="text-[11px] text-muted-foreground">Arahkan kamera ke QR Code tiket peserta</p>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  setFacingMode((prev) => (prev === 'environment' ? 'user' : 'environment'));
-                }}
-                className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted text-muted-foreground hover:text-foreground transition"
-                title="Ganti Kamera"
-              >
-                <FlipHorizontal className="h-4 w-4" />
-              </button>
+            <div className="flex flex-wrap items-center gap-2">
+              {availableCameras.length > 1 ? (
+                <select
+                  value={selectedCameraId}
+                  onChange={(e) => setSelectedCameraId(e.target.value)}
+                  className="rounded-xl border border-border bg-muted/60 px-2.5 py-1 text-xs text-foreground focus:border-emerald-500 focus:outline-none max-w-[130px] truncate"
+                  title="Pilih Kamera"
+                >
+                  <option value="">Kamera Default</option>
+                  {availableCameras.map((cam) => (
+                    <option key={cam.id} value={cam.id}>
+                      {cam.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <button
+                  onClick={() => {
+                    setFacingMode((prev) => (prev === 'environment' ? 'user' : 'environment'));
+                  }}
+                  className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted text-muted-foreground hover:text-foreground transition"
+                  title="Ganti Kamera"
+                >
+                  <FlipHorizontal className="h-4 w-4" />
+                </button>
+              )}
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
                 className={`flex h-8 w-8 items-center justify-center rounded-xl transition ${
@@ -523,14 +557,17 @@ export default function AdminScanPage() {
           </div>
 
           {/* Viewfinder */}
-          <div className="relative aspect-square max-h-[360px] w-full bg-black overflow-hidden flex items-center justify-center">
-            <div id="fullscreen-qr-reader" className="h-full w-full object-cover [&>video]:h-full [&>video]:w-full [&>video]:object-cover" />
+          <div className="relative w-full min-h-[300px] max-h-[420px] bg-black overflow-hidden flex items-center justify-center">
+            <div
+              id="fullscreen-qr-reader"
+              className="w-full flex items-center justify-center [&_video]:max-h-[420px] [&_video]:w-full [&_video]:object-contain"
+            />
 
             {/* Target Overlay */}
             {cameraActive && !currentResult && (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <div className="relative h-64 w-64 rounded-3xl border-2 border-dashed border-emerald-400/80 shadow-[0_0_25px_rgba(16,185,129,0.35)]">
-                  <div className="absolute inset-x-2 h-0.5 bg-emerald-400 shadow-[0_0_12px_#10b981] animate-bounce duration-1000" />
+                <div className="relative h-60 w-60 rounded-3xl border-2 border-dashed border-emerald-400/80 shadow-[0_0_25px_rgba(16,185,129,0.35)]">
+                  <div className="absolute inset-x-2 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_12px_#10b981] animate-bounce duration-1000" />
                   <div className="absolute -top-1.5 -left-1.5 h-6 w-6 border-t-4 border-l-4 border-emerald-400 rounded-tl-xl" />
                   <div className="absolute -top-1.5 -right-1.5 h-6 w-6 border-t-4 border-r-4 border-emerald-400 rounded-tr-xl" />
                   <div className="absolute -bottom-1.5 -left-1.5 h-6 w-6 border-b-4 border-l-4 border-emerald-400 rounded-bl-xl" />

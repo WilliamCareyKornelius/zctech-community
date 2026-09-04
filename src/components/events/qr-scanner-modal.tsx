@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import {
   Camera,
   X,
@@ -16,7 +16,6 @@ import {
   FlipHorizontal,
   ArrowRight,
   Upload,
-  Image as ImageIcon,
 } from 'lucide-react';
 import type { EventRegistration } from '@/lib/db';
 
@@ -117,6 +116,8 @@ function extractTicketId(rawText: string): string {
 export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrScannerModalProps) {
   const [cameraActive, setCameraActive] = useState(false);
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
+  const [availableCameras, setAvailableCameras] = useState<Array<{ id: string; label: string }>>([]);
+  const [selectedCameraId, setSelectedCameraId] = useState<string>('');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [autoNext, setAutoNext] = useState(true);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -183,10 +184,10 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
       if (!ticketId) return;
 
       const now = Date.now();
-      // KUNCI: Abaikan jika tiket yang sama baru saja di-scan dalam 5 detik terakhir
+      // KUNCI: Abaikan jika tiket yang sama baru saja di-scan dalam 7 detik terakhir
       if (
         lastScannedTicketRef.current === ticketId &&
-        now - lastScannedTimestampRef.current < 5000
+        now - lastScannedTimestampRef.current < 7000
       ) {
         return;
       }
@@ -251,7 +252,7 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
       } finally {
         setIsProcessing(false);
 
-        // Jika autoNext aktif, tunggu 3 detik baru buka scanner lagi
+        // Jika autoNext aktif, beri jeda 3.2 detik baru siap baca tiket selanjutnya
         if (autoNext) {
           resumeTimerRef.current = setTimeout(() => {
             resumeScanning();
@@ -261,6 +262,12 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
     },
     [pin, soundEnabled, autoNext, onCheckInSuccess, resumeScanning]
   );
+
+  // Simpan processTicket dalam ref agar re-render tidak menyebabkan kamera restart
+  const processTicketRef = useRef(processTicket);
+  useEffect(() => {
+    processTicketRef.current = processTicket;
+  });
 
   // Inisialisasi dan jalankan kamera dengan resolusi & deteksi optimal
   const startCamera = useCallback(async () => {
@@ -277,63 +284,74 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
         await stopCamera();
       }
 
-      // Gunakan hardware BarcodeDetector jika didukung OS browser
+      // Utamakan decoding QR Code saja untuk efisiensi CPU dan akurasi instan
       const html5QrCode = new Html5Qrcode(containerId, {
-        experimentalFeatures: {
-          useBarCodeDetectorIfSupported: true,
-        },
+        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
         verbose: false,
       });
       html5QrCodeRef.current = html5QrCode;
 
-      // Pilih kamera yang tepat
-      let cameraIdOrConfig: string | { facingMode: string } = { facingMode };
+      // Konfigurasi target kamera
+      const cameraConfig: string | { facingMode: string } = selectedCameraId
+        ? selectedCameraId
+        : { facingMode };
+
+      const scanConfig = {
+        fps: 10,
+        qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+          const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+          const qrboxSize = Math.floor(minEdge * 0.72);
+          return {
+            width: Math.max(qrboxSize, 200),
+            height: Math.max(qrboxSize, 200),
+          };
+        },
+      };
+
       try {
+        await html5QrCode.start(
+          cameraConfig,
+          scanConfig,
+          (decodedText) => {
+            if (isBusyRef.current) return;
+            processTicketRef.current?.(decodedText);
+          },
+          () => {} // silent on normal empty frames
+        );
+      } catch (firstErr) {
+        console.warn('Primary camera target failed, trying available camera fallback:', firstErr);
         const cameras = await Html5Qrcode.getCameras();
         if (cameras && cameras.length > 0) {
-          if (facingMode === 'environment') {
-            const backCam = cameras.find(
-              (c) =>
-                c.label.toLowerCase().includes('back') ||
-                c.label.toLowerCase().includes('rear') ||
-                c.label.toLowerCase().includes('environment') ||
-                c.label.toLowerCase().includes('belakang')
-            );
-            if (backCam) {
-              cameraIdOrConfig = backCam.id;
-            } else if (cameras.length > 1) {
-              cameraIdOrConfig = cameras[cameras.length - 1].id;
-            }
-          } else {
-            const frontCam = cameras.find(
-              (c) =>
-                c.label.toLowerCase().includes('front') ||
-                c.label.toLowerCase().includes('user') ||
-                c.label.toLowerCase().includes('depan')
-            );
-            if (frontCam) {
-              cameraIdOrConfig = frontCam.id;
-            }
-          }
+          await html5QrCode.start(
+            cameras[0].id,
+            scanConfig,
+            (decodedText) => {
+              if (isBusyRef.current) return;
+              processTicketRef.current?.(decodedText);
+            },
+            () => {}
+          );
+        } else {
+          throw firstErr;
         }
-      } catch {
-        // Fallback default facingMode
       }
 
-      // Mulai scanning seluruh area video (tanpa batasan qrbox sempit agar cepat terdeteksi)
-      await html5QrCode.start(
-        cameraIdOrConfig,
-        {
-          fps: 15,
-        },
-        (decodedText) => {
-          if (isBusyRef.current) return;
-          processTicket(decodedText);
-        },
-        () => {}
-      );
-
       setCameraActive(true);
+
+      // Ambil daftar kamera setelah izin aktif untuk dropdown
+      try {
+        const devices = await Html5Qrcode.getCameras();
+        if (devices && devices.length > 0) {
+          setAvailableCameras(
+            devices.map((d, i) => ({
+              id: d.id,
+              label: d.label || `Kamera ${i + 1}`,
+            }))
+          );
+        }
+      } catch {
+        // ignore device listing error
+      }
     } catch (err: unknown) {
       console.error('Camera start error:', err);
       const msg = err instanceof Error ? err.message : String(err);
@@ -346,7 +364,7 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
       }
       setCameraActive(false);
     }
-  }, [facingMode, stopCamera, processTicket]);
+  }, [facingMode, selectedCameraId, stopCamera]);
 
   // Scan dari file gambar jika kamera HP bermasalah
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -356,7 +374,7 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
     setIsProcessing(true);
     try {
       const decodedText = await html5QrCodeRef.current.scanFile(file, false);
-      processTicket(decodedText);
+      processTicketRef.current?.(decodedText);
     } catch {
       alert('QR Code tidak terdeteksi pada gambar yang diunggah. Pastikan gambar jelas dan tidak buram.');
     } finally {
@@ -417,13 +435,16 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
         </div>
 
         {/* Viewfinder Camera Area */}
-        <div className="relative bg-black aspect-square max-h-[360px] w-full overflow-hidden flex items-center justify-center">
-          <div id="interactive-qr-reader" className="h-full w-full object-cover [&>video]:h-full [&>video]:w-full [&>video]:object-cover" />
+        <div className="relative bg-black w-full overflow-hidden flex items-center justify-center min-h-[300px] max-h-[380px]">
+          <div
+            id="interactive-qr-reader"
+            className="w-full flex items-center justify-center [&_video]:max-h-[380px] [&_video]:w-full [&_video]:object-contain"
+          />
 
           {/* Target Frame Overlay */}
           {cameraActive && !scanResult && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="relative h-64 w-64 rounded-3xl border-2 border-dashed border-emerald-400/80 shadow-[0_0_25px_rgba(16,185,129,0.35)]">
+              <div className="relative h-60 w-60 rounded-3xl border-2 border-dashed border-emerald-400/80 shadow-[0_0_25px_rgba(16,185,129,0.35)]">
                 {/* Laser scan line */}
                 <div className="absolute inset-x-2 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_12px_#10b981] animate-bounce duration-1000" />
                 {/* 4 Corner Markers */}
@@ -521,17 +542,33 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
 
         {/* Toolbar Pengaturan */}
         <div className="border-t border-border bg-card p-4 space-y-3">
-          <div className="flex items-center justify-between gap-2 text-xs">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={toggleFacingMode}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-muted/60 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted transition"
-                title="Ganti Kamera Depan/Belakang"
-              >
-                <FlipHorizontal className="h-3.5 w-3.5" />
-                {facingMode === 'environment' ? 'Kamera Belakang' : 'Kamera Depan'}
-              </button>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="flex flex-wrap items-center gap-2">
+              {availableCameras.length > 1 ? (
+                <select
+                  value={selectedCameraId}
+                  onChange={(e) => setSelectedCameraId(e.target.value)}
+                  className="rounded-xl border border-border bg-muted/60 px-2.5 py-1.5 text-xs text-foreground focus:border-emerald-500 focus:outline-none max-w-[140px] truncate"
+                  title="Pilih Kamera"
+                >
+                  <option value="">Kamera Default</option>
+                  {availableCameras.map((cam) => (
+                    <option key={cam.id} value={cam.id}>
+                      {cam.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <button
+                  type="button"
+                  onClick={toggleFacingMode}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-muted/60 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted transition"
+                  title="Ganti Kamera Depan/Belakang"
+                >
+                  <FlipHorizontal className="h-3.5 w-3.5" />
+                  {facingMode === 'environment' ? 'Kamera Belakang' : 'Kamera Depan'}
+                </button>
+              )}
 
               <button
                 type="button"
