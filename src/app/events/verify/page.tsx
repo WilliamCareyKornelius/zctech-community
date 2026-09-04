@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle2, AlertCircle, Calendar, MapPin, User, Building, QrCode, ArrowLeft } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Calendar, MapPin, User, Building, QrCode, ArrowLeft, Camera } from 'lucide-react';
 import type { EventRegistration } from '@/lib/db';
 
 function TicketVerifyContent() {
@@ -18,7 +18,6 @@ function TicketVerifyContent() {
 
   useEffect(() => {
     if (!ticketId) {
-      setError('Kode tiket tidak ditemukan di URL.');
       setLoading(false);
       return;
     }
@@ -65,6 +64,36 @@ function TicketVerifyContent() {
         <div className="text-center space-y-3">
           <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
           <p className="text-sm text-muted-foreground font-medium">Memverifikasi keaslian e-tiket...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!ticketId) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-28 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-500/10 text-emerald-500 mb-5 border border-emerald-500/20 shadow-lg shadow-emerald-500/10">
+          <QrCode className="h-8 w-8" />
+        </div>
+        <h1 className="text-2xl font-black text-foreground">Verifikasi & Scanner E-Tiket</h1>
+        <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+          Pindai QR Code tiket peserta menggunakan kamera HP panitia atau kelola absensi pendaftaran di panel panitia.
+        </p>
+
+        <div className="mt-6 flex flex-col gap-3">
+          <Link
+            href="/events/admin/scan"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 py-3.5 text-sm font-bold text-black shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 transition"
+          >
+            <Camera className="h-4 w-4" />
+            Nyalakan Kamera Scanner Tiket
+          </Link>
+          <Link
+            href="/events/admin/attendees"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-3 text-sm font-semibold text-foreground hover:bg-muted transition"
+          >
+            Buka Panel Daftar Peserta
+          </Link>
         </div>
       </div>
     );

@@ -85,13 +85,22 @@ export async function saveRegistration(registration: EventRegistration): Promise
 }
 
 // Check-in tiket saat hari-H acara
-export async function checkInRegistration(id: string): Promise<EventRegistration | null> {
+export async function checkInRegistration(
+  id: string
+): Promise<(EventRegistration & { alreadyAttended?: boolean }) | null> {
   const all = await getRegistrations();
   const target = all.find((r) => r.id.toLowerCase() === id.toLowerCase());
   if (!target) return null;
 
-  target.status = 'attended';
-  target.checkedInAt = new Date().toISOString();
-  await saveRegistration(target);
-  return target;
+  const alreadyAttended = target.status === 'attended';
+  if (!alreadyAttended) {
+    target.status = 'attended';
+    target.checkedInAt = new Date().toISOString();
+    await saveRegistration(target);
+  }
+
+  return {
+    ...target,
+    alreadyAttended,
+  };
 }

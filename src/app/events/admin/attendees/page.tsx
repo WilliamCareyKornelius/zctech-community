@@ -17,11 +17,14 @@ import {
   Building,
   Mail,
   Phone,
+  QrCode,
 } from 'lucide-react';
 import type { EventRegistration } from '@/lib/db';
+import { QrScannerModal } from '@/components/events/qr-scanner-modal';
 
 export default function AdminAttendeesPage() {
   const [pin, setPin] = useState('');
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [registrations, setRegistrations] = useState<EventRegistration[]>([]);
@@ -183,7 +186,21 @@ export default function AdminAttendeesPage() {
               Kelola data kehadiran, periksa status pendaftaran, atau unduh daftar peserta dalam format CSV/Excel.
             </p>
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              onClick={() => setIsScannerOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2.5 text-xs font-bold text-black hover:from-emerald-400 hover:to-teal-400 transition shadow-md shadow-emerald-500/20 active:scale-95"
+            >
+              <QrCode className="h-4 w-4" />
+              Scan QR Tiket
+            </button>
+            <Link
+              href="/events/admin/scan"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2.5 text-xs font-bold text-emerald-500 hover:bg-emerald-500/20 transition"
+              title="Buka Mode Layar Penuh Khusus HP Panitia"
+            >
+              Fullscreen Scanner
+            </Link>
             <button
               onClick={() => fetchData(pin)}
               disabled={loading}
@@ -195,10 +212,10 @@ export default function AdminAttendeesPage() {
             <a
               href={`/api/events/admin/attendees?pin=${encodeURIComponent(pin)}&export=csv`}
               download
-              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 px-4 py-2.5 text-xs font-bold text-black hover:bg-emerald-400 transition shadow-sm"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs font-bold text-foreground hover:bg-muted transition shadow-sm"
             >
               <Download className="h-3.5 w-3.5" />
-              Unduh CSV / Excel
+              Unduh CSV
             </a>
             <button
               onClick={handleLogout}
@@ -394,6 +411,25 @@ export default function AdminAttendeesPage() {
           </div>
         </div>
       </div>
+
+      {/* Floating Scanner Action Button (Mobile) */}
+      <div className="fixed bottom-6 right-6 z-40 sm:hidden">
+        <button
+          onClick={() => setIsScannerOpen(true)}
+          className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500 text-black shadow-2xl shadow-emerald-500/50 hover:bg-emerald-400 active:scale-95 transition"
+          title="Scan QR Tiket"
+        >
+          <QrCode className="h-7 w-7" />
+        </button>
+      </div>
+
+      {/* QR Scanner Modal */}
+      <QrScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        pin={pin}
+        onCheckInSuccess={() => fetchData(pin)}
+      />
     </div>
   );
 }
