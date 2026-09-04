@@ -145,7 +145,7 @@ export default function AdminAttendeesPage() {
                 required
                 value={pin}
                 onChange={(e) => setPin(e.target.value)}
-                placeholder="Masukkan PIN (misal: zctech2026 / amin123)"
+                placeholder="Masukkan PIN Panitia"
                 className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm text-foreground focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               />
             </div>
@@ -159,7 +159,7 @@ export default function AdminAttendeesPage() {
           </form>
 
           <p className="mt-6 text-center text-[11px] text-muted-foreground">
-            PIN standar: <code className="text-emerald-500 font-bold">zctech2026</code> atau <code className="text-emerald-500 font-bold">amin123</code>
+            Akses terbatas hanya untuk panitia dan tim penyelenggara ZCTech.
           </p>
         </div>
       </div>
