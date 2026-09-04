@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import {
   Camera,
   CheckCircle2,
@@ -19,10 +19,10 @@ import {
   Users,
   Clock,
   ArrowRight,
+  Upload,
 } from 'lucide-react';
 import type { EventRegistration } from '@/lib/db';
 
-// Suara Beep Ramah & Lembut
 function playBeep(type: 'success' | 'warning' | 'error') {
   try {
     const AudioCtx =
@@ -141,6 +141,7 @@ export default function AdminScanPage() {
   const lastScannedTicketRef = useRef<string>('');
   const lastScannedTimestampRef = useRef<number>(0);
   const resumeTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Check saved PIN
   useEffect(() => {
@@ -180,17 +181,6 @@ export default function AdminScanPage() {
     }
     setCurrentResult(null);
     isBusyRef.current = false;
-
-    if (html5QrCodeRef.current) {
-      try {
-        const state = html5QrCodeRef.current.getState();
-        if (state === 3) {
-          html5QrCodeRef.current.resume();
-        }
-      } catch (e) {
-        console.warn('Resume error:', e);
-      }
-    }
   }, []);
 
   const stopCamera = useCallback(async () => {
@@ -225,10 +215,10 @@ export default function AdminScanPage() {
       if (!ticketId) return;
 
       const now = Date.now();
-      // Cegah scan berulang pada tiket yang sama dalam 8 detik
+      // Cegah scan berulang pada tiket yang sama dalam 5 detik
       if (
         lastScannedTicketRef.current === ticketId &&
-        now - lastScannedTimestampRef.current < 8000
+        now - lastScannedTimestampRef.current < 5000
       ) {
         return;
       }
@@ -236,18 +226,6 @@ export default function AdminScanPage() {
       isBusyRef.current = true;
       lastScannedTicketRef.current = ticketId;
       lastScannedTimestampRef.current = now;
-
-      // Pause kamera
-      if (html5QrCodeRef.current) {
-        try {
-          const state = html5QrCodeRef.current.getState();
-          if (state === 2) {
-            html5QrCodeRef.current.pause(true);
-          }
-        } catch {
-          // ignore
-        }
-      }
 
       setIsProcessing(true);
       const effectivePin =
@@ -329,21 +307,50 @@ export default function AdminScanPage() {
       }
 
       const html5QrCode = new Html5Qrcode(containerId, {
-        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+        experimentalFeatures: {
+          useBarCodeDetectorIfSupported: true,
+        },
         verbose: false,
       });
       html5QrCodeRef.current = html5QrCode;
 
+      let cameraIdOrConfig: string | { facingMode: string } = { facingMode };
+      try {
+        const cameras = await Html5Qrcode.getCameras();
+        if (cameras && cameras.length > 0) {
+          if (facingMode === 'environment') {
+            const backCam = cameras.find(
+              (c) =>
+                c.label.toLowerCase().includes('back') ||
+                c.label.toLowerCase().includes('rear') ||
+                c.label.toLowerCase().includes('environment') ||
+                c.label.toLowerCase().includes('belakang')
+            );
+            if (backCam) {
+              cameraIdOrConfig = backCam.id;
+            } else if (cameras.length > 1) {
+              cameraIdOrConfig = cameras[cameras.length - 1].id;
+            }
+          } else {
+            const frontCam = cameras.find(
+              (c) =>
+                c.label.toLowerCase().includes('front') ||
+                c.label.toLowerCase().includes('user') ||
+                c.label.toLowerCase().includes('depan')
+            );
+            if (frontCam) {
+              cameraIdOrConfig = frontCam.id;
+            }
+          }
+        }
+      } catch {
+        // fallback
+      }
+
       await html5QrCode.start(
-        { facingMode },
+        cameraIdOrConfig,
         {
-          fps: 10,
-          qrbox: (w, h) => {
-            const minEdge = Math.min(w, h);
-            const size = Math.floor(minEdge * 0.72);
-            return { width: Math.max(size, 220), height: Math.max(size, 220) };
-          },
-          aspectRatio: 1.0,
+          fps: 15,
         },
         (decodedText) => {
           if (isBusyRef.current) return;
@@ -364,6 +371,22 @@ export default function AdminScanPage() {
       setCameraActive(false);
     }
   }, [facingMode, stopCamera, processTicket]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !html5QrCodeRef.current) return;
+
+    setIsProcessing(true);
+    try {
+      const decodedText = await html5QrCodeRef.current.scanFile(file, false);
+      processTicket(decodedText);
+    } catch {
+      alert('QR Code tidak terdeteksi pada gambar yang dipilih.');
+    } finally {
+      setIsProcessing(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   useEffect(() => {
     if (isUnlocked) {
@@ -454,7 +477,12 @@ export default function AdminScanPage() {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border bg-muted/40 px-5 py-3.5">
             <div>
-              <h2 className="text-sm font-black text-foreground">Scanner Registrasi Ulang</h2>
+              <h2 className="text-sm font-black text-foreground flex items-center gap-1.5">
+                Scanner Registrasi Ulang
+                {cameraActive && (
+                  <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                )}
+              </h2>
               <p className="text-[11px] text-muted-foreground">Arahkan kamera ke QR Code tiket peserta</p>
             </div>
             <div className="flex items-center gap-2">
@@ -476,22 +504,37 @@ export default function AdminScanPage() {
               >
                 {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
               </button>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted text-muted-foreground hover:text-foreground transition"
+                title="Unggah File / Screenshot QR"
+              >
+                <Upload className="h-4 w-4" />
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
             </div>
           </div>
 
           {/* Viewfinder */}
           <div className="relative aspect-square max-h-[360px] w-full bg-black overflow-hidden flex items-center justify-center">
-            <div id="fullscreen-qr-reader" className="h-full w-full object-cover" />
+            <div id="fullscreen-qr-reader" className="h-full w-full object-cover [&>video]:h-full [&>video]:w-full [&>video]:object-cover" />
 
-            {/* Laser effect */}
+            {/* Target Overlay */}
             {cameraActive && !currentResult && (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <div className="relative h-60 w-60 rounded-2xl border-2 border-dashed border-emerald-400/80 shadow-[0_0_20px_rgba(16,185,129,0.4)]">
-                  <div className="absolute inset-x-2 h-0.5 bg-emerald-400 shadow-[0_0_10px_#10b981] animate-bounce duration-1000" />
-                  <div className="absolute -top-1 -left-1 h-5 w-5 border-t-4 border-l-4 border-emerald-400 rounded-tl" />
-                  <div className="absolute -top-1 -right-1 h-5 w-5 border-t-4 border-r-4 border-emerald-400 rounded-tr" />
-                  <div className="absolute -bottom-1 -left-1 h-5 w-5 border-b-4 border-l-4 border-emerald-400 rounded-bl" />
-                  <div className="absolute -bottom-1 -right-1 h-5 w-5 border-b-4 border-r-4 border-emerald-400 rounded-br" />
+                <div className="relative h-64 w-64 rounded-3xl border-2 border-dashed border-emerald-400/80 shadow-[0_0_25px_rgba(16,185,129,0.35)]">
+                  <div className="absolute inset-x-2 h-0.5 bg-emerald-400 shadow-[0_0_12px_#10b981] animate-bounce duration-1000" />
+                  <div className="absolute -top-1.5 -left-1.5 h-6 w-6 border-t-4 border-l-4 border-emerald-400 rounded-tl-xl" />
+                  <div className="absolute -top-1.5 -right-1.5 h-6 w-6 border-t-4 border-r-4 border-emerald-400 rounded-tr-xl" />
+                  <div className="absolute -bottom-1.5 -left-1.5 h-6 w-6 border-b-4 border-l-4 border-emerald-400 rounded-bl-xl" />
+                  <div className="absolute -bottom-1.5 -right-1.5 h-6 w-6 border-b-4 border-r-4 border-emerald-400 rounded-br-xl" />
                 </div>
               </div>
             )}
