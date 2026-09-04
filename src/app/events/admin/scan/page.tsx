@@ -23,13 +23,32 @@ import {
 } from 'lucide-react';
 import type { EventRegistration } from '@/lib/db';
 
+let sharedAudioCtx: AudioContext | null = null;
+
+function getSharedAudioContext(): AudioContext | null {
+  try {
+    if (typeof window === 'undefined') return null;
+    if (!sharedAudioCtx) {
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (AudioCtx) {
+        sharedAudioCtx = new AudioCtx();
+      }
+    }
+    if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
+      sharedAudioCtx.resume().catch(() => {});
+    }
+    return sharedAudioCtx;
+  } catch {
+    return null;
+  }
+}
+
 function playBeep(type: 'success' | 'warning' | 'error') {
   try {
-    const AudioCtx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
+    const ctx = getSharedAudioContext();
+    if (!ctx) return;
 
     if (type === 'success') {
       const osc1 = ctx.createOscillator();
@@ -120,10 +139,14 @@ export default function AdminScanPage() {
   const [selectedCameraId, setSelectedCameraId] = useState<string>('');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [autoNext, setAutoNext] = useState(true);
+  const [scanSpeed, setScanSpeed] = useState<'fast' | 'normal'>('fast');
+  const [torchSupported, setTorchSupported] = useState(false);
+  const [isTorchOn, setIsTorchOn] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
   // Results & History
   const [isProcessing, setIsProcessing] = useState(false);
+  const [scanFeedback, setScanFeedback] = useState<'success' | 'warning' | 'error' | null>(null);
   const [currentResult, setCurrentResult] = useState<{
     status: 'success' | 'warning' | 'error';
     message: string;
@@ -137,9 +160,9 @@ export default function AdminScanPage() {
   // Manual input
   const [manualTicket, setManualTicket] = useState('');
 
-  // Anti-loop refs
+  // Anti-loop refs & concurrency lock
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
-  const isBusyRef = useRef<boolean>(false);
+  const isApiFetchingRef = useRef<boolean>(false);
   const lastScannedTicketRef = useRef<string>('');
   const lastScannedTimestampRef = useRef<number>(0);
   const resumeTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -182,7 +205,6 @@ export default function AdminScanPage() {
       resumeTimerRef.current = null;
     }
     setCurrentResult(null);
-    isBusyRef.current = false;
   }, []);
 
   const stopCamera = useCallback(async () => {
@@ -190,7 +212,8 @@ export default function AdminScanPage() {
       clearTimeout(resumeTimerRef.current);
       resumeTimerRef.current = null;
     }
-    isBusyRef.current = false;
+    isApiFetchingRef.current = false;
+    setIsTorchOn(false);
 
     if (html5QrCodeRef.current) {
       try {
@@ -211,23 +234,48 @@ export default function AdminScanPage() {
     setCameraActive(false);
   }, []);
 
+  // Toggle senter / torch HP
+  const toggleTorch = async () => {
+    if (!html5QrCodeRef.current) return;
+    try {
+      const next = !isTorchOn;
+      await html5QrCodeRef.current.applyVideoConstraints({
+        advanced: [{ torch: next }],
+      } as unknown as MediaTrackConstraints);
+      setIsTorchOn(next);
+    } catch (err) {
+      console.warn('Torch toggle error:', err);
+    }
+  };
+
   const processTicket = useCallback(
     async (rawTicket: string) => {
       const ticketId = extractTicketId(rawTicket);
       if (!ticketId) return;
 
       const now = Date.now();
-      // Cegah scan berulang pada tiket yang sama dalam 7 detik
+      // Cegah scan berulang pada tiket yang SAMA dalam 6 detik
       if (
         lastScannedTicketRef.current === ticketId &&
-        now - lastScannedTimestampRef.current < 7000
+        now - lastScannedTimestampRef.current < 6000
       ) {
         return;
       }
 
-      isBusyRef.current = true;
+      // Jangan kirim request baru jika request sebelumnya masih berjalan
+      if (isApiFetchingRef.current) {
+        return;
+      }
+
+      isApiFetchingRef.current = true;
       lastScannedTicketRef.current = ticketId;
       lastScannedTimestampRef.current = now;
+
+      // Hapus timer auto-next sebelumnya jika tiket baru langsung terdeteksi
+      if (resumeTimerRef.current) {
+        clearTimeout(resumeTimerRef.current);
+        resumeTimerRef.current = null;
+      }
 
       setIsProcessing(true);
       const effectivePin =
@@ -252,6 +300,7 @@ export default function AdminScanPage() {
 
           if (reg.alreadyAttended) {
             if (soundEnabled) playBeep('warning');
+            setScanFeedback('warning');
             setCurrentResult({
               status: 'warning',
               message: `⚠️ Sudah Hadir Sebelumnya (${nowStr})`,
@@ -260,9 +309,10 @@ export default function AdminScanPage() {
             setHistory((prev) => [{ reg, time: nowStr, duplicate: true }, ...prev.slice(0, 9)]);
           } else {
             if (soundEnabled) playBeep('success');
+            setScanFeedback('success');
             setCurrentResult({
               status: 'success',
-              message: `✓ Berhasil Check-In: ${reg.fullName}`,
+              message: `✓ Berhasil Hadir: ${reg.fullName}`,
               registration: reg,
             });
             setStats((prev) => ({ ...prev, attended: prev.attended + 1 }));
@@ -270,6 +320,7 @@ export default function AdminScanPage() {
           }
         } else {
           if (soundEnabled) playBeep('error');
+          setScanFeedback('error');
           setCurrentResult({
             status: 'error',
             message: data.error || `Tiket [${ticketId}] tidak valid.`,
@@ -277,21 +328,29 @@ export default function AdminScanPage() {
         }
       } catch {
         if (soundEnabled) playBeep('error');
+        setScanFeedback('error');
         setCurrentResult({
           status: 'error',
           message: 'Kesalahan jaringan saat memproses tiket.',
         });
       } finally {
         setIsProcessing(false);
+        isApiFetchingRef.current = false;
+
+        // Reset visual border glow setelah 700ms
+        setTimeout(() => {
+          setScanFeedback(null);
+        }, 700);
 
         if (autoNext) {
+          const delay = scanSpeed === 'fast' ? 1400 : 3200;
           resumeTimerRef.current = setTimeout(() => {
             resumeScanning();
-          }, 3200);
+          }, delay);
         }
       }
     },
-    [pin, soundEnabled, autoNext, resumeScanning]
+    [pin, soundEnabled, autoNext, scanSpeed, resumeScanning]
   );
 
   const processTicketRef = useRef(processTicket);
@@ -302,7 +361,7 @@ export default function AdminScanPage() {
   const startCamera = useCallback(async () => {
     setCameraError(null);
     setCurrentResult(null);
-    isBusyRef.current = false;
+    isApiFetchingRef.current = false;
 
     try {
       const containerId = 'fullscreen-qr-reader';
@@ -324,7 +383,7 @@ export default function AdminScanPage() {
         : { facingMode };
 
       const scanConfig = {
-        fps: 10,
+        fps: 12,
         qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
           const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
           const qrboxSize = Math.floor(minEdge * 0.72);
@@ -340,7 +399,6 @@ export default function AdminScanPage() {
           cameraConfig,
           scanConfig,
           (decodedText) => {
-            if (isBusyRef.current) return;
             processTicketRef.current?.(decodedText);
           },
           () => {}
@@ -353,7 +411,6 @@ export default function AdminScanPage() {
             cameras[0].id,
             scanConfig,
             (decodedText) => {
-              if (isBusyRef.current) return;
               processTicketRef.current?.(decodedText);
             },
             () => {}
@@ -364,6 +421,25 @@ export default function AdminScanPage() {
       }
 
       setCameraActive(true);
+
+      // Cek fitur senter / torch
+      try {
+        const caps = html5QrCode.getRunningTrackCameraCapabilities();
+        if (
+          caps &&
+          typeof (caps as unknown as { torchFeature: () => { isSupported: () => boolean } })
+            .torchFeature === 'function' &&
+          (caps as unknown as { torchFeature: () => { isSupported: () => boolean } })
+            .torchFeature()
+            .isSupported()
+        ) {
+          setTorchSupported(true);
+        } else {
+          setTorchSupported(false);
+        }
+      } catch {
+        setTorchSupported(false);
+      }
 
       try {
         const devices = await Html5Qrcode.getCameras();
@@ -408,6 +484,7 @@ export default function AdminScanPage() {
 
   useEffect(() => {
     if (isUnlocked) {
+      getSharedAudioContext();
       const timer = setTimeout(() => {
         startCamera();
       }, 250);
@@ -421,7 +498,10 @@ export default function AdminScanPage() {
   // LOGIN VIEW
   if (!isUnlocked) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4 pt-24 pb-12">
+      <div
+        onClick={getSharedAudioContext}
+        className="min-h-screen bg-background flex items-center justify-center px-4 pt-24 pb-12"
+      >
         <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-8 shadow-2xl">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500 mb-5">
             <Lock className="h-7 w-7" />
@@ -440,6 +520,7 @@ export default function AdminScanPage() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              getSharedAudioContext();
               if (pin.trim()) verifyPin(pin.trim());
             }}
             className="mt-6 space-y-4"
@@ -454,7 +535,7 @@ export default function AdminScanPage() {
             />
             <button
               type="submit"
-              className="w-full rounded-xl bg-emerald-500 py-3 text-sm font-bold text-black hover:bg-emerald-400 transition"
+              className="w-full rounded-xl bg-emerald-500 py-3 text-sm font-bold text-black hover:bg-emerald-400 transition active:scale-98"
             >
               Nyalakan Scanner
             </button>
@@ -470,7 +551,10 @@ export default function AdminScanPage() {
 
   // SCANNER VIEW
   return (
-    <div className="min-h-screen bg-background pt-24 pb-16 px-4 sm:px-6">
+    <div
+      onClick={getSharedAudioContext}
+      className="min-h-screen bg-background pt-24 pb-16 px-4 sm:px-6"
+    >
       <div className="mx-auto max-w-xl space-y-5">
         {/* Top bar navigation */}
         <div className="flex items-center justify-between">
@@ -483,7 +567,7 @@ export default function AdminScanPage() {
           </Link>
 
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-500">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-500 shadow-sm shadow-emerald-500/10">
               <Users className="h-3.5 w-3.5" />
               {stats.attended} / {stats.total} Hadir
             </span>
@@ -521,6 +605,7 @@ export default function AdminScanPage() {
               ) : (
                 <button
                   onClick={() => {
+                    setSelectedCameraId('');
                     setFacingMode((prev) => (prev === 'environment' ? 'user' : 'environment'));
                   }}
                   className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted text-muted-foreground hover:text-foreground transition"
@@ -529,6 +614,22 @@ export default function AdminScanPage() {
                   <FlipHorizontal className="h-4 w-4" />
                 </button>
               )}
+
+              {/* Torch Flashlight (jika didukung kamera HP) */}
+              {torchSupported && (
+                <button
+                  onClick={toggleTorch}
+                  className={`flex h-8 w-8 items-center justify-center rounded-xl transition ${
+                    isTorchOn
+                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                      : 'bg-muted text-muted-foreground'
+                  }`}
+                  title="Nyalakan Lampu Senter"
+                >
+                  <Zap className="h-4 w-4" />
+                </button>
+              )}
+
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
                 className={`flex h-8 w-8 items-center justify-center rounded-xl transition ${
@@ -563,10 +664,20 @@ export default function AdminScanPage() {
               className="w-full flex items-center justify-center [&_video]:max-h-[420px] [&_video]:w-full [&_video]:object-contain"
             />
 
-            {/* Target Overlay */}
+            {/* Target Overlay dengan Respons Visual Flash Berwarna */}
             {cameraActive && !currentResult && (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <div className="relative h-60 w-60 rounded-3xl border-2 border-dashed border-emerald-400/80 shadow-[0_0_25px_rgba(16,185,129,0.35)]">
+                <div
+                  className={`relative h-60 w-60 rounded-3xl border-2 transition-all duration-300 ${
+                    scanFeedback === 'success'
+                      ? 'border-emerald-400 bg-emerald-500/20 shadow-[0_0_45px_rgba(16,185,129,0.85)] scale-105'
+                      : scanFeedback === 'warning'
+                      ? 'border-amber-400 bg-amber-500/20 shadow-[0_0_45px_rgba(245,158,11,0.85)] scale-105'
+                      : scanFeedback === 'error'
+                      ? 'border-rose-500 bg-rose-500/20 shadow-[0_0_45px_rgba(244,63,94,0.85)] scale-105'
+                      : 'border-dashed border-emerald-400/80 shadow-[0_0_25px_rgba(16,185,129,0.35)]'
+                  }`}
+                >
                   <div className="absolute inset-x-2 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_12px_#10b981] animate-bounce duration-1000" />
                   <div className="absolute -top-1.5 -left-1.5 h-6 w-6 border-t-4 border-l-4 border-emerald-400 rounded-tl-xl" />
                   <div className="absolute -top-1.5 -right-1.5 h-6 w-6 border-t-4 border-r-4 border-emerald-400 rounded-tr-xl" />
@@ -580,7 +691,7 @@ export default function AdminScanPage() {
             {isProcessing && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/85 backdrop-blur-sm z-20">
                 <div className="h-9 w-9 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent mb-2" />
-                <p className="text-xs font-bold text-emerald-400">Menyimpan Kehadiran...</p>
+                <p className="text-xs font-bold text-emerald-400">Memverifikasi Kehadiran...</p>
               </div>
             )}
 
@@ -642,7 +753,9 @@ export default function AdminScanPage() {
 
                   <div className="mt-3 flex items-center justify-between pt-2 border-t border-white/10">
                     <span className="text-[10px] opacity-75">
-                      {autoNext ? 'Lanjut otomatis dalam 3 detik...' : 'Siap tiket berikutnya'}
+                      {autoNext
+                        ? `Siap tiket berikutnya (${scanSpeed === 'fast' ? '1.4s' : '3.2s'})...`
+                        : 'Siap tiket berikutnya'}
                     </span>
                     <button
                       onClick={resumeScanning}
@@ -659,18 +772,20 @@ export default function AdminScanPage() {
           {/* Bottom controller */}
           <div className="p-4 bg-card border-t border-border space-y-3">
             <div className="flex items-center justify-between text-xs">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={autoNext}
-                  onChange={(e) => setAutoNext(e.target.checked)}
-                  className="h-4 w-4 rounded accent-emerald-500"
-                />
-                <span className="font-bold flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <Zap className="h-3 w-3 text-emerald-500" />
-                  Auto-Lanjut (3s)
-                </span>
-              </label>
+              {/* Speed Mode Selector */}
+              <button
+                type="button"
+                onClick={() => setScanSpeed((s) => (s === 'fast' ? 'normal' : 'fast'))}
+                className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-bold transition ${
+                  scanSpeed === 'fast'
+                    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-500'
+                    : 'border-border bg-muted text-muted-foreground'
+                }`}
+                title="Mode Antrian Cepat"
+              >
+                <Zap className="h-3.5 w-3.5" />
+                {scanSpeed === 'fast' ? 'Mode Kilat (1.4s)' : 'Mode Normal (3.2s)'}
+              </button>
 
               <button
                 onClick={startCamera}
@@ -750,3 +865,4 @@ export default function AdminScanPage() {
     </div>
   );
 }
+

@@ -39,7 +39,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Validasi format email sederhana
+    // 2. Normalisasi & Validasi WhatsApp
+    let cleanWa = whatsapp.trim().replace(/[^0-9+]/g, '');
+    if (cleanWa.startsWith('+62')) {
+      cleanWa = '0' + cleanWa.slice(3);
+    } else if (cleanWa.startsWith('62')) {
+      cleanWa = '0' + cleanWa.slice(2);
+    }
+    if (cleanWa.length < 9 || cleanWa.length > 15) {
+      return NextResponse.json(
+        { error: 'Nomor WhatsApp tidak valid. Masukkan nomor HP/WA aktif (contoh: 081234567890).' },
+        { status: 400 }
+      );
+    }
+
+    // 3. Validasi format email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
       return NextResponse.json(
@@ -48,7 +62,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Validasi event
+    // 4. Validasi event
     const event = events.find((e) => e.slug === eventSlug);
     if (!event) {
       return NextResponse.json({ error: 'Kegiatan tidak ditemukan.' }, { status: 404 });
@@ -62,7 +76,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Cek apakah sudah pernah terdaftar
+    // 5. Cek apakah sudah pernah terdaftar
     const existing = await findRegistrationByEmail(eventSlug, email);
     if (existing) {
       // Re-kirim email jika diminta
@@ -78,12 +92,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 5. Generate Ticket ID & QR Code
-    const ticketId = generateTicketId('ZCT-EXP');
+    // 6. Generate Ticket ID & QR Code dengan Error Correction Level M untuk kemudahan scan
+    const prefix = eventSlug.toLowerCase().includes('workshop') ? 'ZCT-WS' : 'ZCT-EXP';
+    const ticketId = generateTicketId(prefix);
     const verifyUrl = `https://community.zctech.id/events/verify?ticket=${encodeURIComponent(ticketId)}`;
     const qrCodeDataUrl = await QRCode.toDataURL(verifyUrl, {
-      width: 320,
+      width: 360,
       margin: 2,
+      errorCorrectionLevel: 'M',
       color: {
         dark: '#022c22',
         light: '#ffffff',
@@ -96,7 +112,7 @@ export async function POST(request: NextRequest) {
       eventTitle: event.title,
       fullName: fullName.trim(),
       email: email.trim().toLowerCase(),
-      whatsapp: whatsapp.trim(),
+      whatsapp: cleanWa,
       institution: institution.trim(),
       category: category.trim(),
       studentId: studentId?.trim() || undefined,
@@ -106,7 +122,7 @@ export async function POST(request: NextRequest) {
       status: 'confirmed',
     };
 
-    // 6. Simpan ke database
+    // 7. Simpan ke database
     await saveRegistration(newRegistration);
 
     // 7. Kirim email bukti pendaftaran Traveloka-style

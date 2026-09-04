@@ -26,14 +26,34 @@ interface QrScannerModalProps {
   onCheckInSuccess?: (reg: EventRegistration) => void;
 }
 
+// Audio Context singleton dengan auto-resume untuk zero-latency sound
+let sharedAudioCtx: AudioContext | null = null;
+
+function getSharedAudioContext(): AudioContext | null {
+  try {
+    if (typeof window === 'undefined') return null;
+    if (!sharedAudioCtx) {
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (AudioCtx) {
+        sharedAudioCtx = new AudioCtx();
+      }
+    }
+    if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
+      sharedAudioCtx.resume().catch(() => {});
+    }
+    return sharedAudioCtx;
+  } catch {
+    return null;
+  }
+}
+
 // Suara Beep Lembut & Menyenangkan (Web Audio API)
 function playScanSound(type: 'success' | 'warning' | 'error') {
   try {
-    const AudioCtx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
+    const ctx = getSharedAudioContext();
+    if (!ctx) return;
 
     if (type === 'success') {
       const osc1 = ctx.createOscillator();
@@ -120,10 +140,14 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
   const [selectedCameraId, setSelectedCameraId] = useState<string>('');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [autoNext, setAutoNext] = useState(true);
+  const [scanSpeed, setScanSpeed] = useState<'fast' | 'normal'>('fast');
+  const [torchSupported, setTorchSupported] = useState(false);
+  const [isTorchOn, setIsTorchOn] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
-  // Status hasil
+  // Status hasil & visual pulse feedback
   const [isProcessing, setIsProcessing] = useState(false);
+  const [scanFeedback, setScanFeedback] = useState<'success' | 'warning' | 'error' | null>(null);
   const [scanResult, setScanResult] = useState<{
     status: 'success' | 'warning' | 'error';
     message: string;
@@ -132,9 +156,9 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
 
   const [manualTicketInput, setManualTicketInput] = useState('');
 
-  // Anti-loop refs (Kunci kestabilan & kecepatan scanner)
+  // Anti-loop refs & concurrency lock
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
-  const isBusyRef = useRef<boolean>(false);
+  const isApiFetchingRef = useRef<boolean>(false);
   const lastScannedTicketRef = useRef<string>('');
   const lastScannedTimestampRef = useRef<number>(0);
   const resumeTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -147,7 +171,6 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
       resumeTimerRef.current = null;
     }
     setScanResult(null);
-    isBusyRef.current = false;
   }, []);
 
   // Hentikan kamera
@@ -156,7 +179,8 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
       clearTimeout(resumeTimerRef.current);
       resumeTimerRef.current = null;
     }
-    isBusyRef.current = false;
+    isApiFetchingRef.current = false;
+    setIsTorchOn(false);
 
     if (html5QrCodeRef.current) {
       try {
@@ -177,25 +201,50 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
     setCameraActive(false);
   }, []);
 
-  // Proses validasi dan check-in tiket
+  // Toggle senter / torch HP
+  const toggleTorch = async () => {
+    if (!html5QrCodeRef.current) return;
+    try {
+      const next = !isTorchOn;
+      await html5QrCodeRef.current.applyVideoConstraints({
+        advanced: [{ torch: next }],
+      } as unknown as MediaTrackConstraints);
+      setIsTorchOn(next);
+    } catch (err) {
+      console.warn('Torch toggle error:', err);
+    }
+  };
+
+  // Proses validasi dan check-in tiket (Mode Super Cepat & Aman)
   const processTicket = useCallback(
     async (rawTicket: string) => {
       const ticketId = extractTicketId(rawTicket);
       if (!ticketId) return;
 
       const now = Date.now();
-      // KUNCI: Abaikan jika tiket yang sama baru saja di-scan dalam 7 detik terakhir
+      // KUNCI: Abaikan jika tiket yang SAMA persis baru saja di-scan dalam 6 detik terakhir
       if (
         lastScannedTicketRef.current === ticketId &&
-        now - lastScannedTimestampRef.current < 7000
+        now - lastScannedTimestampRef.current < 6000
       ) {
         return;
       }
 
-      // Kunci pemrosesan agar tidak membaca frame video lain
-      isBusyRef.current = true;
+      // KUNCI: Jika request sebelumnya masih di perjalanan jaringan, tunggu sampai beres
+      if (isApiFetchingRef.current) {
+        return;
+      }
+
+      // Mulai proses
+      isApiFetchingRef.current = true;
       lastScannedTicketRef.current = ticketId;
       lastScannedTimestampRef.current = now;
+
+      // Hapus timer auto-next sebelumnya jika tiket baru langsung terdeteksi
+      if (resumeTimerRef.current) {
+        clearTimeout(resumeTimerRef.current);
+        resumeTimerRef.current = null;
+      }
 
       setIsProcessing(true);
 
@@ -220,16 +269,18 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
 
           if (reg.alreadyAttended) {
             if (soundEnabled) playScanSound('warning');
+            setScanFeedback('warning');
             setScanResult({
               status: 'warning',
-              message: `Peserta ${reg.fullName} sudah pernah check-in sebelumnya!`,
+              message: `Peserta ${reg.fullName} sudah pernah check-in!`,
               registration: reg,
             });
           } else {
             if (soundEnabled) playScanSound('success');
+            setScanFeedback('success');
             setScanResult({
               status: 'success',
-              message: `✓ Berhasil Check-In: ${reg.fullName}`,
+              message: `✓ Berhasil Hadir: ${reg.fullName}`,
               registration: reg,
             });
             if (onCheckInSuccess) {
@@ -238,6 +289,7 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
           }
         } else {
           if (soundEnabled) playScanSound('error');
+          setScanFeedback('error');
           setScanResult({
             status: 'error',
             message: data.error || `Tiket [${ticketId}] tidak valid.`,
@@ -245,22 +297,30 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
         }
       } catch {
         if (soundEnabled) playScanSound('error');
+        setScanFeedback('error');
         setScanResult({
           status: 'error',
           message: 'Gagal menghubungi server verifikasi.',
         });
       } finally {
         setIsProcessing(false);
+        isApiFetchingRef.current = false;
 
-        // Jika autoNext aktif, beri jeda 3.2 detik baru siap baca tiket selanjutnya
+        // Reset visual border glow setelah 700ms
+        setTimeout(() => {
+          setScanFeedback(null);
+        }, 700);
+
+        // Jika autoNext aktif, otomatis hilangkan pop-up sesuai kecepatan yang dipilih
         if (autoNext) {
+          const delay = scanSpeed === 'fast' ? 1400 : 3200;
           resumeTimerRef.current = setTimeout(() => {
             resumeScanning();
-          }, 3200);
+          }, delay);
         }
       }
     },
-    [pin, soundEnabled, autoNext, onCheckInSuccess, resumeScanning]
+    [pin, soundEnabled, autoNext, scanSpeed, onCheckInSuccess, resumeScanning]
   );
 
   // Simpan processTicket dalam ref agar re-render tidak menyebabkan kamera restart
@@ -273,7 +333,7 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
   const startCamera = useCallback(async () => {
     setCameraError(null);
     setScanResult(null);
-    isBusyRef.current = false;
+    isApiFetchingRef.current = false;
 
     try {
       const containerId = 'interactive-qr-reader';
@@ -297,7 +357,7 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
         : { facingMode };
 
       const scanConfig = {
-        fps: 10,
+        fps: 12,
         qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
           const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
           const qrboxSize = Math.floor(minEdge * 0.72);
@@ -313,7 +373,6 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
           cameraConfig,
           scanConfig,
           (decodedText) => {
-            if (isBusyRef.current) return;
             processTicketRef.current?.(decodedText);
           },
           () => {} // silent on normal empty frames
@@ -326,7 +385,6 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
             cameras[0].id,
             scanConfig,
             (decodedText) => {
-              if (isBusyRef.current) return;
               processTicketRef.current?.(decodedText);
             },
             () => {}
@@ -337,6 +395,25 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
       }
 
       setCameraActive(true);
+
+      // Cek fitur senter / torch
+      try {
+        const caps = html5QrCode.getRunningTrackCameraCapabilities();
+        if (
+          caps &&
+          typeof (caps as unknown as { torchFeature: () => { isSupported: () => boolean } })
+            .torchFeature === 'function' &&
+          (caps as unknown as { torchFeature: () => { isSupported: () => boolean } })
+            .torchFeature()
+            .isSupported()
+        ) {
+          setTorchSupported(true);
+        } else {
+          setTorchSupported(false);
+        }
+      } catch {
+        setTorchSupported(false);
+      }
 
       // Ambil daftar kamera setelah izin aktif untuk dropdown
       try {
@@ -386,6 +463,7 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
   // Efek buka/tutup modal
   useEffect(() => {
     if (isOpen) {
+      getSharedAudioContext();
       const timer = setTimeout(() => {
         startCamera();
       }, 250);
@@ -399,13 +477,17 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
   }, [isOpen, startCamera, stopCamera]);
 
   const toggleFacingMode = () => {
+    setSelectedCameraId('');
     setFacingMode((prev) => (prev === 'environment' ? 'user' : 'environment'));
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-md animate-in fade-in duration-200">
+    <div
+      onClick={getSharedAudioContext}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-md animate-in fade-in duration-200"
+    >
       <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-emerald-500/30 bg-card shadow-2xl">
         {/* Header Modal */}
         <div className="flex items-center justify-between border-b border-border bg-muted/40 px-5 py-3.5">
@@ -441,10 +523,20 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
             className="w-full flex items-center justify-center [&_video]:max-h-[380px] [&_video]:w-full [&_video]:object-contain"
           />
 
-          {/* Target Frame Overlay */}
+          {/* Target Frame Overlay dengan Respons Flash Berwarna */}
           {cameraActive && !scanResult && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="relative h-60 w-60 rounded-3xl border-2 border-dashed border-emerald-400/80 shadow-[0_0_25px_rgba(16,185,129,0.35)]">
+              <div
+                className={`relative h-60 w-60 rounded-3xl border-2 transition-all duration-300 ${
+                  scanFeedback === 'success'
+                    ? 'border-emerald-400 bg-emerald-500/20 shadow-[0_0_40px_rgba(16,185,129,0.8)] scale-105'
+                    : scanFeedback === 'warning'
+                    ? 'border-amber-400 bg-amber-500/20 shadow-[0_0_40px_rgba(245,158,11,0.8)] scale-105'
+                    : scanFeedback === 'error'
+                    ? 'border-rose-500 bg-rose-500/20 shadow-[0_0_40px_rgba(244,63,94,0.8)] scale-105'
+                    : 'border-dashed border-emerald-400/80 shadow-[0_0_25px_rgba(16,185,129,0.35)]'
+                }`}
+              >
                 {/* Laser scan line */}
                 <div className="absolute inset-x-2 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_12px_#10b981] animate-bounce duration-1000" />
                 {/* 4 Corner Markers */}
@@ -478,7 +570,7 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
           {isProcessing && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/85 backdrop-blur-sm z-20">
               <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent mb-3" />
-              <p className="text-xs font-bold text-emerald-400">Menyimpan Kehadiran...</p>
+              <p className="text-xs font-bold text-emerald-400">Memverifikasi Kehadiran...</p>
             </div>
           )}
 
@@ -526,7 +618,9 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
 
                 <div className="mt-3 flex items-center justify-between pt-2 border-t border-white/10">
                   <span className="text-[10px] opacity-75">
-                    {autoNext ? 'Siap otomatis dalam 3 detik...' : 'Siap tiket berikutnya'}
+                    {autoNext
+                      ? `Siap tiket berikutnya (${scanSpeed === 'fast' ? '1.4s' : '3.2s'})...`
+                      : 'Siap tiket berikutnya'}
                   </span>
                   <button
                     onClick={resumeScanning}
@@ -570,6 +664,23 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
                 </button>
               )}
 
+              {/* Torch Flashlight Toggle (jika HP mendukung) */}
+              {torchSupported && (
+                <button
+                  type="button"
+                  onClick={toggleTorch}
+                  className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+                    isTorchOn
+                      ? 'border-amber-500 bg-amber-500/20 text-amber-400'
+                      : 'border-border bg-muted/60 text-muted-foreground'
+                  }`}
+                  title="Nyalakan Lampu Senter"
+                >
+                  <Zap className="h-3.5 w-3.5" />
+                  {isTorchOn ? 'Senter Nyala' : 'Senter'}
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={() => setSoundEnabled(!soundEnabled)}
@@ -603,18 +714,22 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
               />
             </div>
 
-            <label className="flex items-center gap-1.5 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={autoNext}
-                onChange={(e) => setAutoNext(e.target.checked)}
-                className="h-4 w-4 rounded accent-emerald-500"
-              />
-              <span className="text-[11px] font-bold text-foreground flex items-center gap-1">
-                <Zap className="h-3 w-3 text-emerald-500" />
-                Auto-Lanjut
-              </span>
-            </label>
+            {/* Pengaturan Kecepatan Scan Antrian */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setScanSpeed((s) => (s === 'fast' ? 'normal' : 'fast'))}
+                className={`inline-flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-[11px] font-bold transition ${
+                  scanSpeed === 'fast'
+                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500'
+                    : 'border-border bg-muted/60 text-muted-foreground'
+                }`}
+                title="Mode Pemindaian Cepat untuk Antrian Panjang"
+              >
+                <Zap className="h-3 w-3" />
+                {scanSpeed === 'fast' ? 'Mode Kilat (1.4s)' : 'Mode Normal (3.2s)'}
+              </button>
+            </div>
           </div>
 
           {/* Input Manual */}
@@ -651,3 +766,4 @@ export function QrScannerModal({ isOpen, onClose, pin, onCheckInSuccess }: QrSca
     </div>
   );
 }
+

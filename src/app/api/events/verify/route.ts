@@ -50,9 +50,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Tiket tidak ditemukan.' }, { status: 404 });
     }
 
+    const isDuplicate = Boolean(updated.alreadyAttended);
+
     return NextResponse.json({
       success: true,
-      message: `Peserta ${updated.fullName} berhasil di-check in!`,
+      alreadyCheckedIn: isDuplicate,
+      message: isDuplicate
+        ? `Tiket SUDAH PERNAH digunakan oleh ${updated.fullName}`
+        : `Peserta ${updated.fullName} berhasil di-check in!`,
       registration: updated,
     });
   } catch (error) {

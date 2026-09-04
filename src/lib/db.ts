@@ -64,72 +64,102 @@ export async function findRegistrationByEmail(
   );
 }
 
-// Simpan pendaftaran baru secara aman (atomic write)
-export async function saveRegistration(registration: EventRegistration): Promise<EventRegistration> {
-  ensureDbExists();
-  const all = await getRegistrations();
+// Mutex queue untuk menjamin setiap operasi penulisan file berjalan berurutan secara aman (zero race conditions)
+let dbLock = Promise.resolve();
 
-  // Cek apakah sudah ada (update jika ada atau tambahkan baru)
-  const existingIdx = all.findIndex((r) => r.id === registration.id);
-  if (existingIdx >= 0) {
-    all[existingIdx] = registration;
-  } else {
-    all.unshift(registration);
-  }
-
-  const tempFile = `${DB_FILE}.tmp.${Date.now()}`;
-  await fs.promises.writeFile(tempFile, JSON.stringify(all, null, 2), 'utf-8');
-  await fs.promises.rename(tempFile, DB_FILE);
-
-  return registration;
+function withDbLock<T>(operation: () => Promise<T>): Promise<T> {
+  const next = dbLock.then(operation, operation);
+  dbLock = next.then(
+    () => {},
+    () => {}
+  );
+  return next;
 }
 
-// Check-in tiket saat hari-H acara
+// Simpan pendaftaran baru secara aman (atomic write dengan lock)
+export async function saveRegistration(registration: EventRegistration): Promise<EventRegistration> {
+  return withDbLock(async () => {
+    ensureDbExists();
+    const all = await getRegistrations();
+
+    // Cek apakah sudah ada (update jika ada atau tambahkan baru)
+    const existingIdx = all.findIndex((r) => r.id === registration.id);
+    if (existingIdx >= 0) {
+      all[existingIdx] = registration;
+    } else {
+      all.unshift(registration);
+    }
+
+    const tempFile = `${DB_FILE}.tmp.${Date.now()}.${Math.random().toString(36).substring(2, 6)}`;
+    await fs.promises.writeFile(tempFile, JSON.stringify(all, null, 2), 'utf-8');
+    await fs.promises.rename(tempFile, DB_FILE);
+
+    return registration;
+  });
+}
+
+// Check-in tiket saat hari-H acara (thread-safe)
 export async function checkInRegistration(
   id: string
 ): Promise<(EventRegistration & { alreadyAttended?: boolean }) | null> {
-  const all = await getRegistrations();
-  const target = all.find((r) => r.id.toLowerCase() === id.toLowerCase());
-  if (!target) return null;
+  return withDbLock(async () => {
+    ensureDbExists();
+    const all = await getRegistrations();
+    const target = all.find((r) => r.id.toLowerCase() === id.toLowerCase());
+    if (!target) return null;
 
-  const alreadyAttended = target.status === 'attended';
-  if (!alreadyAttended) {
-    target.status = 'attended';
-    target.checkedInAt = new Date().toISOString();
-    await saveRegistration(target);
-  }
+    const alreadyAttended = target.status === 'attended';
+    if (!alreadyAttended) {
+      target.status = 'attended';
+      target.checkedInAt = new Date().toISOString();
 
-  return {
-    ...target,
-    alreadyAttended,
-  };
+      const tempFile = `${DB_FILE}.tmp.${Date.now()}.${Math.random().toString(36).substring(2, 6)}`;
+      await fs.promises.writeFile(tempFile, JSON.stringify(all, null, 2), 'utf-8');
+      await fs.promises.rename(tempFile, DB_FILE);
+    }
+
+    return {
+      ...target,
+      alreadyAttended,
+    };
+  });
 }
 
 // Reset / batalkan status check-in kembali ke 'confirmed'
 export async function resetCheckInRegistration(id: string): Promise<EventRegistration | null> {
-  const all = await getRegistrations();
-  const target = all.find((r) => r.id.toLowerCase() === id.toLowerCase());
-  if (!target) return null;
+  return withDbLock(async () => {
+    ensureDbExists();
+    const all = await getRegistrations();
+    const target = all.find((r) => r.id.toLowerCase() === id.toLowerCase());
+    if (!target) return null;
 
-  target.status = 'confirmed';
-  delete target.checkedInAt;
-  await saveRegistration(target);
-  return target;
+    target.status = 'confirmed';
+    delete target.checkedInAt;
+
+    const tempFile = `${DB_FILE}.tmp.${Date.now()}.${Math.random().toString(36).substring(2, 6)}`;
+    await fs.promises.writeFile(tempFile, JSON.stringify(all, null, 2), 'utf-8');
+    await fs.promises.rename(tempFile, DB_FILE);
+
+    return target;
+  });
 }
 
 // Hapus data pendaftaran peserta berdasarkan ID tiket
 export async function deleteRegistration(id: string): Promise<boolean> {
-  ensureDbExists();
-  const all = await getRegistrations();
-  const filtered = all.filter((r) => r.id.toLowerCase() !== id.toLowerCase());
+  return withDbLock(async () => {
+    ensureDbExists();
+    const all = await getRegistrations();
+    const filtered = all.filter((r) => r.id.toLowerCase() !== id.toLowerCase());
 
-  if (filtered.length === all.length) {
-    return false;
-  }
+    if (filtered.length === all.length) {
+      return false;
+    }
 
-  const tempFile = `${DB_FILE}.tmp.${Date.now()}`;
-  await fs.promises.writeFile(tempFile, JSON.stringify(filtered, null, 2), 'utf-8');
-  await fs.promises.rename(tempFile, DB_FILE);
+    const tempFile = `${DB_FILE}.tmp.${Date.now()}.${Math.random().toString(36).substring(2, 6)}`;
+    await fs.promises.writeFile(tempFile, JSON.stringify(filtered, null, 2), 'utf-8');
+    await fs.promises.rename(tempFile, DB_FILE);
 
-  return true;
+    return true;
+  });
 }
+
