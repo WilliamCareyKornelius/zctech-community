@@ -4,17 +4,11 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin } from 'lucide-react';
 import { getEventEffectiveStatus } from '@/lib/content';
+import { formatEventWithTimeWITA } from '@/lib/date';
 import type { Event } from '@/lib/types';
 
 export function EventsList({ events }: { events: Event[] }) {
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  const formatDate = (iso: string) => formatEventWithTimeWITA(iso);
 
   return (
     <section className="w-full bg-muted px-4 py-16 sm:px-6 lg:px-8">

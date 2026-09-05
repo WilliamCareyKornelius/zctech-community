@@ -5,6 +5,7 @@ import { Calendar, Clock, MapPin, Users } from 'lucide-react';
 import { JsonLd } from '@/components/shared/json-ld';
 import { CopyButton } from '@/components/shared/copy-button';
 import { events, siteConfig, getEventEffectiveStatus } from '@/lib/content';
+import { formatEventWithTimeWITA } from '@/lib/date';
 
 type Params = Promise<{ slug: string }>;
 
@@ -31,15 +32,7 @@ export default async function EventDetailPage({ params }: { params: Params }) {
   const effectiveStatus = getEventEffectiveStatus(event);
   const isCompleted = effectiveStatus === 'completed';
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString('id-ID', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  const formatDate = (iso: string) => formatEventWithTimeWITA(iso);
 
   const shareUrl = `${siteConfig.url}/events/${event.slug}`;
 

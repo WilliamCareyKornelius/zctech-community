@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRegistrations, checkInRegistration, deleteRegistration, resetCheckInRegistration } from '@/lib/db';
+import { formatDateTimeWITA } from '@/lib/date';
 
 const VALID_PINS = ['zctech2026', 'amin123', 'admin'];
 
@@ -39,8 +40,8 @@ export async function GET(request: NextRequest) {
       'Kategori',
       'NIM/NIS',
       'Status Kehadiran',
-      'Waktu Pendaftaran',
-      'Waktu Check-In',
+      'Waktu Pendaftaran (WITA)',
+      'Waktu Check-In (WITA)',
     ];
 
     const rows = registrations.map((r, index) => [
@@ -53,8 +54,8 @@ export async function GET(request: NextRequest) {
       `"${r.category.replace(/"/g, '""')}"`,
       `"${(r.studentId || '-').replace(/"/g, '""')}"`,
       `"${r.status === 'attended' ? 'Hadir' : 'Terkonfirmasi'}"`,
-      `"${new Date(r.createdAt).toLocaleString('id-ID')}"`,
-      `"${r.checkedInAt ? new Date(r.checkedInAt).toLocaleString('id-ID') : '-'}"`,
+      `"${formatDateTimeWITA(r.createdAt)}"`,
+      `"${r.checkedInAt ? formatDateTimeWITA(r.checkedInAt) : '-'}"`,
     ]);
 
     const csvContent = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
@@ -86,7 +87,8 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { ticketId, action } = body;
+    const action = body.action;
+    const ticketId = body.ticketId || body.id;
 
     if (!ticketId) {
       return NextResponse.json({ error: 'Kode tiket diperlukan.' }, { status: 400 });

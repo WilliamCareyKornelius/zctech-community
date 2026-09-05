@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, MapPin, Clock, ArrowRight, Sparkles } from 'lucide-react';
 import { events, getEventEffectiveStatus } from '@/lib/content';
+import { formatEventFullDateWITA } from '@/lib/date';
 
 export function EventPopup() {
   const [isOpen, setIsOpen] = useState(false);
@@ -55,13 +56,7 @@ export function EventPopup() {
 
   if (!mounted || !activeEvent || !isOpen) return null;
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString('id-ID', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
+  const formatDate = (iso: string) => formatEventFullDateWITA(iso);
 
   return (
     <AnimatePresence>

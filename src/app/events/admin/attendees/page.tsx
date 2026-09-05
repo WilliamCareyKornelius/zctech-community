@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import type { EventRegistration } from '@/lib/db';
 import { QrScannerModal } from '@/components/events/qr-scanner-modal';
+import { formatDateTimeWITA, formatTimeWITA } from '@/lib/date';
 
 export default function AdminAttendeesPage() {
   const [pin, setPin] = useState('');
@@ -236,6 +237,12 @@ export default function AdminAttendeesPage() {
             <p className="text-xs text-muted-foreground mt-1">
               Kelola data kehadiran, periksa status pendaftaran, atau unduh daftar peserta dalam format CSV/Excel.
             </p>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                <Clock className="h-3 w-3" />
+                Zona Waktu: WITA (Samarinda, UTC+8)
+              </span>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2.5">
             <button
@@ -369,7 +376,7 @@ export default function AdminAttendeesPage() {
                   <th className="p-4">Nama Lengkap</th>
                   <th className="p-4">Institusi & Kategori</th>
                   <th className="p-4">Kontak</th>
-                  <th className="p-4">Waktu Daftar</th>
+                  <th className="p-4">Waktu Daftar (WITA)</th>
                   <th className="p-4 text-center">Status</th>
                   <th className="p-4 text-right">Aksi</th>
                 </tr>
@@ -417,13 +424,15 @@ export default function AdminAttendeesPage() {
                             {item.whatsapp}
                           </a>
                         </td>
-                        <td className="p-4 text-muted-foreground">
-                          {new Date(item.createdAt).toLocaleDateString('id-ID', {
-                            day: 'numeric',
-                            month: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+                        <td className="p-4 text-muted-foreground whitespace-nowrap">
+                          <div className="font-medium text-foreground">
+                            {formatDateTimeWITA(item.createdAt)}
+                          </div>
+                          {item.checkedInAt && (
+                            <div className="text-[10px] text-blue-500 font-semibold mt-0.5">
+                              Check-In: {formatTimeWITA(item.checkedInAt)}
+                            </div>
+                          )}
                         </td>
                         <td className="p-4 text-center">
                           <span

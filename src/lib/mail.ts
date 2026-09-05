@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import type { EventRegistration } from './db';
+import { formatDateTimeWITA } from './date';
 
 const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
 const SMTP_PORT = Number(process.env.SMTP_PORT) || 587;
@@ -283,6 +284,10 @@ export function generateTravelokaTicketHtml(reg: EventRegistration): string {
           <tr>
             <td class="info-label">🎓 Kategori Peserta</td>
             <td class="info-value">${reg.category}</td>
+          </tr>
+          <tr>
+            <td class="info-label">🕒 Waktu Pendaftaran</td>
+            <td class="info-value">${formatDateTimeWITA(reg.createdAt)}</td>
           </tr>
           ${
             reg.studentId

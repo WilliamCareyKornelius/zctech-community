@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin } from 'lucide-react';
 import { events, getEventEffectiveStatus } from '@/lib/content';
+import { formatEventDateWITA } from '@/lib/date';
 
 export function UpcomingEvents() {
   const sortedEvents = [...events].sort(
@@ -10,12 +11,7 @@ export function UpcomingEvents() {
 
   if (sortedEvents.length === 0) return null;
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
+  const formatDate = (iso: string) => formatEventDateWITA(iso);
 
   return (
     <section className="w-full bg-muted px-4 py-24 sm:px-6 lg:px-8">

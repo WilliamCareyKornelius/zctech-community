@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, MapPin } from 'lucide-react';
 import { events, siteConfig, getEventEffectiveStatus } from '@/lib/content';
+import { formatEventWithTimeWITA } from '@/lib/date';
 
 function getNearestUpcoming() {
   return events
@@ -44,14 +45,7 @@ export function EventCountdown() {
 
   if (!event) return null;
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  const formatDate = (iso: string) => formatEventWithTimeWITA(iso);
 
   return (
     <section className="w-full bg-background px-4 py-24 sm:px-6 lg:px-8">

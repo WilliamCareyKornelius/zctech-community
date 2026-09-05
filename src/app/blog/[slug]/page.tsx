@@ -5,6 +5,7 @@ import { ArrowLeft, Clock, User } from 'lucide-react';
 import { JsonLd } from '@/components/shared/json-ld';
 import { CopyButton } from '@/components/shared/copy-button';
 import { posts, siteConfig, team } from '@/lib/content';
+import { formatEventDateWITA } from '@/lib/date';
 
 type Params = Promise<{ slug: string }>;
 
@@ -34,8 +35,7 @@ export default async function BlogDetailPage({ params }: { params: Params }) {
     .slice(0, 2);
   const author = team.find((m) => m.name === post.author);
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  const formatDate = (iso: string) => formatEventDateWITA(iso, 'long');
 
   const renderContent = (text: string) =>
     text.split('\n\n').map((paragraph, index) => (

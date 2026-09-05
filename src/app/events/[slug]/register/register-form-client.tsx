@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import type { Event } from '@/lib/types';
 import type { EventRegistration } from '@/lib/db';
+import { formatEventFullDateWITA, formatDateTimeWITA } from '@/lib/date';
 
 export function RegisterFormClient({ event }: { event: Event }) {
   const [formData, setFormData] = useState({
@@ -69,13 +70,7 @@ export function RegisterFormClient({ event }: { event: Event }) {
     }
   };
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString('id-ID', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
+  const formatDate = (iso: string) => formatEventFullDateWITA(iso);
 
   return (
     <div className="min-h-screen bg-background pb-20 pt-28 sm:pt-32">
@@ -220,6 +215,10 @@ export function RegisterFormClient({ event }: { event: Event }) {
                       <div className="rounded-xl border border-border bg-muted/30 p-3">
                         <span className="text-[11px] text-muted-foreground block">No. WhatsApp</span>
                         <span className="font-bold text-foreground">{ticketResult.whatsapp}</span>
+                      </div>
+                      <div className="rounded-xl border border-border bg-muted/30 p-3">
+                        <span className="text-[11px] text-muted-foreground block">Waktu Pendaftaran</span>
+                        <span className="font-bold text-foreground">{formatDateTimeWITA(ticketResult.createdAt)}</span>
                       </div>
                       {ticketResult.studentId && (
                         <div className="sm:col-span-2 rounded-xl border border-border bg-muted/30 p-3">

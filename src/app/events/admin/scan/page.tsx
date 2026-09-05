@@ -22,6 +22,7 @@ import {
   Upload,
 } from 'lucide-react';
 import type { EventRegistration } from '@/lib/db';
+import { formatTimeWITA, formatDateTimeWITA } from '@/lib/date';
 
 let sharedAudioCtx: AudioContext | null = null;
 
@@ -45,8 +46,14 @@ function getSharedAudioContext(): AudioContext | null {
   }
 }
 
+let lastScanAudioTime = 0;
+
 function playBeep(type: 'success' | 'warning' | 'error') {
   try {
+    const now = Date.now();
+    if (now - lastScanAudioTime < 800) return;
+    lastScanAudioTime = now;
+
     const ctx = getSharedAudioContext();
     if (!ctx) return;
 
@@ -296,7 +303,7 @@ export default function AdminScanPage() {
 
         if (res.ok && data.success && data.registration) {
           const reg = data.registration as EventRegistration & { alreadyAttended?: boolean };
-          const nowStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+          const nowStr = formatTimeWITA(new Date());
 
           if (reg.alreadyAttended) {
             if (soundEnabled) playBeep('warning');
@@ -375,24 +382,48 @@ export default function AdminScanPage() {
       // Bersihkan isi div sebelum mulai
       containerEl.innerHTML = '';
 
+      // Mendukung QR Code dan Barcode standar dengan akselerasi hardware BarcodeDetector
       const html5QrCode = new Html5Qrcode(containerId, {
-        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.QR_CODE,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.UPC_A,
+        ],
+        useBarCodeDetectorIfSupported: true,
         verbose: false,
       });
       html5QrCodeRef.current = html5QrCode;
 
-      // Konfigurasi scan tanpa qrbox agar tidak ada shading region hitam yang menutupi video
+      // Konfigurasi scan snappier 20 FPS dengan auto-box dinamis & HD stream
       const scanConfig = {
-        fps: 15,
+        fps: 20,
+        qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+          const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+          const edge = Math.max(200, Math.floor(minEdge * 0.8));
+          return { width: edge, height: edge };
+        },
+        aspectRatio: 1.0,
+        disableFlip: false,
+        videoConstraints: {
+          facingMode: { ideal: facingMode },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
       };
 
       let started = false;
 
       // 1. Coba kamera yang dipilih atau facingMode saat ini
       try {
-        const primaryConfig: string | { facingMode: string } = selectedCameraId
+        const primaryConfig = selectedCameraId
           ? selectedCameraId
-          : { facingMode };
+          : {
+              facingMode: { ideal: facingMode },
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            };
 
         await html5QrCode.start(
           primaryConfig,

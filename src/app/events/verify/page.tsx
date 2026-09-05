@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import type { EventRegistration } from '@/lib/db';
+import { formatDateTimeWITA } from '@/lib/date';
 
 function TicketVerifyContent() {
   const searchParams = useSearchParams();
@@ -213,6 +214,10 @@ function TicketVerifyContent() {
               <span className="text-muted-foreground">Email</span>
               <p className="font-bold text-foreground text-sm mt-0.5">{registration.email}</p>
             </div>
+            <div className="rounded-xl border border-border bg-muted/50 p-3 sm:col-span-2">
+              <span className="text-muted-foreground">Waktu Pendaftaran (WITA)</span>
+              <p className="font-bold text-foreground text-sm mt-0.5">{formatDateTimeWITA(registration.createdAt)}</p>
+            </div>
           </div>
 
           {/* Event details */}
@@ -279,12 +284,11 @@ function TicketVerifyContent() {
               </div>
               <p className="text-[11px] font-normal text-muted-foreground">
                 Tercatat hadir pada{' '}
-                {registration.checkedInAt
-                  ? new Date(registration.checkedInAt).toLocaleTimeString('id-ID', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })
-                  : 'hari ini'}
+                <span className="font-semibold text-foreground">
+                  {registration.checkedInAt
+                    ? formatDateTimeWITA(registration.checkedInAt)
+                    : 'hari ini'}
+                </span>
                 . Selamat mengikuti acara!
               </p>
             </div>

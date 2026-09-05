@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       margin: 2,
       errorCorrectionLevel: 'M',
       color: {
-        dark: '#022c22',
+        dark: '#000000',
         light: '#ffffff',
       },
     });
