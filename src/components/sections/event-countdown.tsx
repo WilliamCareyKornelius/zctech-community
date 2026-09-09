@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, MapPin } from 'lucide-react';
-import { events, siteConfig, getEventEffectiveStatus } from '@/lib/content';
+import { events, siteConfig, getEventEffectiveStatus, isEventRegistrationClosed } from '@/lib/content';
 import { formatEventWithTimeWITA } from '@/lib/date';
 
 function getNearestUpcoming() {
@@ -46,6 +46,7 @@ export function EventCountdown() {
 
   if (!event) return null;
 
+  const isClosed = isEventRegistrationClosed(event);
   const formatDate = (iso: string) => formatEventWithTimeWITA(iso);
 
   return (
@@ -58,15 +59,15 @@ export function EventCountdown() {
 
         <h2 className="text-2xl font-bold text-foreground sm:text-4xl">{event.title}</h2>
 
-        <div className="mt-4 flex flex-wrap items-center gap-4 text-muted-foreground">
-          <span className="inline-flex items-center gap-1.5 text-sm">
-            <Clock className="h-4 w-4" />
-            {formatDate(event.eventDate)}
-          </span>
-          <span className="inline-flex items-center gap-1.5 text-sm">
-            <MapPin className="h-4 w-4" />
-            {event.location}
-          </span>
+        <div className="mt-4 flex flex-wrap gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <span>{formatDate(event.eventDate)}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <span>{event.location}</span>
+          </div>
         </div>
 
         <div className="mt-8 grid grid-cols-4 gap-3 sm:gap-6">
@@ -91,18 +92,16 @@ export function EventCountdown() {
         </div>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          {event.isRegistrationClosed ? (
+          {isClosed ? (
             <Link
               href={event.regLink || `/events/${event.slug}`}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-amber-500/20 border border-amber-500/30 px-6 py-3 text-sm font-bold text-amber-700 dark:text-amber-300 transition hover:bg-amber-500/30"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-muted border border-border/80 px-6 py-3 text-sm font-bold text-muted-foreground transition hover:bg-muted/60"
             >
-              🔒 Pendaftaran Ditutup Sementara
+              🔒 Pendaftaran Ditutup (Cek E-Tiket)
             </Link>
           ) : (
             <a
               href={event.regLink || siteConfig.discordInvite}
-              target="_blank"
-              rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-400 px-6 py-3 text-sm font-bold text-black transition hover:bg-emerald-300"
             >
               Daftar / Gabung

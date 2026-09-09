@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import QRCode from 'qrcode';
-import { events, getEventEffectiveStatus } from '@/lib/content';
+import { events, getEventEffectiveStatus, isEventRegistrationClosed } from '@/lib/content';
 import {
   findRegistrationByEmail,
   saveRegistration,
@@ -92,13 +92,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 6. Validasi jika pendaftaran ditutup sementara
-    if (event.isRegistrationClosed) {
+    // 6. Validasi jika pendaftaran ditutup (otomatis H-1, manual, atau acara selesai)
+    if (isEventRegistrationClosed(event)) {
       return NextResponse.json(
         {
           error:
             event.registrationClosedMessage ||
-            'Pendaftaran untuk kegiatan ini sementara ditutup oleh panitia.',
+            'Masa pendaftaran untuk kegiatan ini telah berakhir atau ditutup oleh panitia.',
         },
         { status: 400 }
       );

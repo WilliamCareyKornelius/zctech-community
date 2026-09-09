@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { events } from '@/lib/content';
+import { events, isEventRegistrationClosed } from '@/lib/content';
 import { RegisterFormClient } from './register-form-client';
 
 type Params = Promise<{ slug: string }>;
@@ -32,5 +32,10 @@ export default async function EventRegisterPage({ params }: { params: Params }) 
     notFound();
   }
 
-  return <RegisterFormClient event={event} />;
+  const effectiveEvent = {
+    ...event,
+    isRegistrationClosed: isEventRegistrationClosed(event),
+  };
+
+  return <RegisterFormClient event={effectiveEvent} />;
 }

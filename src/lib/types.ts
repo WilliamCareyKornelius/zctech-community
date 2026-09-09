@@ -12,6 +12,7 @@ export interface Event {
   status: 'upcoming' | 'ongoing' | 'completed';
   regLink?: string;
   isRegistrationClosed?: boolean;
+  registrationDeadline?: string;
   registrationClosedMessage?: string;
   speaker?: string;
   price?: string;

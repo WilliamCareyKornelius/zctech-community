@@ -365,19 +365,19 @@ export function RegisterFormClient({ event }: { event: Event }) {
                 {event.isRegistrationClosed ? (
                   <div className="space-y-6">
                     {/* Notice Banner */}
-                    <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 sm:p-6 text-amber-900 dark:text-amber-200 space-y-3">
+                    <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-5 sm:p-6 text-rose-950 dark:text-rose-200 space-y-3">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-400">
                           <Lock className="h-5 w-5" />
                         </div>
                         <div>
-                          <h3 className="text-base sm:text-lg font-bold">Pendaftaran Ditutup Sementara</h3>
-                          <p className="text-xs text-amber-700 dark:text-amber-300">Keputusan Panitia ZCTech Community</p>
+                          <h3 className="text-base sm:text-lg font-bold">Masa Pendaftaran Telah Berakhir</h3>
+                          <p className="text-xs text-rose-700 dark:text-rose-300">Pendaftaran resmi ditutup pada H-1 kegiatan (Senin, 14 September 2026 pukul 23.59 WITA)</p>
                         </div>
                       </div>
                       <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground">
                         {event.registrationClosedMessage ||
-                          'Mohon maaf, pendaftaran peserta baru untuk kegiatan ini sedang ditutup sementara oleh panitia.'}
+                          'Mohon maaf, masa pendaftaran peserta baru untuk kegiatan ini telah resmi ditutup (H-1 sebelum acara). Persiapan data peserta dan registrasi kegiatan sedang difinalisasi oleh panitia.'}
                       </p>
                       <div className="flex items-center gap-2 rounded-xl bg-card/70 p-3 text-xs font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                         <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500" />
@@ -423,6 +423,10 @@ export function RegisterFormClient({ event }: { event: Event }) {
                 ) : (
                   <>
                     <div className="mb-6">
+                      <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 mb-3">
+                        <Clock className="h-3.5 w-3.5 text-emerald-500" />
+                        <span>Batas Akhir Pendaftaran: <strong>Senin, 14 September 2026 pukul 23.59 WITA</strong> (H-1 Acara)</span>
+                      </div>
                       <h2 className="text-xl font-bold text-foreground">Formulir Pendaftaran Peserta</h2>
                       <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
                         Isi data diri Anda dengan benar. E-tiket dan bukti pendaftaran resmi akan langsung dikirimkan ke

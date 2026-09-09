@@ -65,6 +65,25 @@ export function getEventEffectiveStatus(event: Event): 'upcoming' | 'ongoing' | 
   return 'upcoming';
 }
 
+/**
+ * Helper untuk menentukan apakah pendaftaran event ditutup secara dinamis:
+ * - Manual flag: isRegistrationClosed === true
+ * - Batas waktu: telah melewati registrationDeadline (H-1, Senin malam jam 24:00 WITA / Selasa 00:00:00 WITA)
+ * - Status event sudah selesai ('completed')
+ */
+export function isEventRegistrationClosed(event: Event): boolean {
+  if (event.isRegistrationClosed) return true;
+  if (getEventEffectiveStatus(event) === 'completed') return true;
+
+  if (event.registrationDeadline) {
+    const now = new Date().getTime();
+    const deadline = new Date(event.registrationDeadline).getTime();
+    if (now >= deadline) return true;
+  }
+
+  return false;
+}
+
 export const events: Event[] = [
   {
     id: 'tech-future-expo-2026',
@@ -79,6 +98,8 @@ export const events: Event[] = [
     type: 'meetup',
     status: 'upcoming',
     isRegistrationClosed: false,
+    registrationDeadline: '2026-09-15T00:00:00+08:00',
+    registrationClosedMessage: 'Masa pendaftaran peserta telah berakhir pada Senin, 14 September 2026 pukul 23.59 WITA (H-1 sebelum acara). Bagi yang telah mendaftar, e-tiket tetap berlaku sah untuk registrasi ulang di lokasi acara.',
     regLink: '/events/tech-future-expo-2026/register',
     speaker: 'Muhammad Kevin Adli Pratama',
     price: 'GRATIS untuk Umum',

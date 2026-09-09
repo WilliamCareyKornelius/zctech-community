@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Calendar, Clock, MapPin, Users } from 'lucide-react';
 import { JsonLd } from '@/components/shared/json-ld';
 import { CopyButton } from '@/components/shared/copy-button';
-import { events, siteConfig, getEventEffectiveStatus } from '@/lib/content';
+import { events, siteConfig, getEventEffectiveStatus, isEventRegistrationClosed } from '@/lib/content';
 import { formatEventWithTimeWITA } from '@/lib/date';
 
 type Params = Promise<{ slug: string }>;
@@ -30,6 +30,7 @@ export default async function EventDetailPage({ params }: { params: Params }) {
 
   const effectiveStatus = getEventEffectiveStatus(event);
   const isCompleted = effectiveStatus === 'completed';
+  const isClosed = isEventRegistrationClosed(event);
 
   const formatDate = (iso: string) => formatEventWithTimeWITA(iso);
 
@@ -140,16 +141,21 @@ export default async function EventDetailPage({ params }: { params: Params }) {
                     ? '● Sedang Berlangsung'
                     : '✕ Kegiatan Telah Selesai'}
                 </span>
-                {event.isRegistrationClosed && !isCompleted && (
-                  <span className="inline-block rounded-full bg-amber-500/20 px-3.5 py-1.5 text-xs font-bold text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                    🔒 Pendaftaran Ditutup Sementara
+                {isClosed && !isCompleted && (
+                  <span className="inline-block rounded-full bg-rose-500/20 px-3.5 py-1.5 text-xs font-bold text-rose-600 dark:text-rose-400 border border-rose-500/30">
+                    🔒 Pendaftaran Telah Ditutup (H-1)
                   </span>
                 )}
               </div>
-              {event.isRegistrationClosed && !isCompleted && (
+              {isClosed && !isCompleted && (
                 <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
-                  {event.registrationClosedMessage || 'Pendaftaran peserta untuk kegiatan ini sementara ditutup oleh panitia.'}
+                  {event.registrationClosedMessage || 'Masa pendaftaran peserta untuk kegiatan ini telah berakhir per Senin malam (H-1 sebelum acara).'}
                 </p>
+              )}
+              {!isClosed && !isCompleted && event.registrationDeadline && (
+                <div className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-emerald-600 dark:text-emerald-400">
+                  <span className="font-bold">⚡ Batas Akhir Pendaftaran:</span> Senin, 14 September 2026 pukul 23.59 WITA (H-1).
+                </div>
               )}
               {isCompleted && (
                 <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
@@ -166,12 +172,12 @@ export default async function EventDetailPage({ params }: { params: Params }) {
             )}
 
             {event.regLink && !isCompleted && (
-              event.isRegistrationClosed ? (
+              isClosed ? (
                 <Link
                   href={event.regLink}
-                  className="block w-full rounded-xl bg-amber-500/15 border border-amber-500/30 py-3.5 text-center font-bold text-amber-700 dark:text-amber-300 transition hover:bg-amber-500/25"
+                  className="block w-full rounded-xl bg-muted border border-border py-3.5 text-center font-bold text-muted-foreground transition hover:bg-muted/80"
                 >
-                  Pendaftaran Ditutup Sementara (Cek E-Tiket)
+                  Masa Pendaftaran Berakhir (Cek E-Tiket)
                 </Link>
               ) : event.regLink.startsWith('http') ? (
                 <a

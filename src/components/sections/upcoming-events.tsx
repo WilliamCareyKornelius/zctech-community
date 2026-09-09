@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin } from 'lucide-react';
-import { events, getEventEffectiveStatus } from '@/lib/content';
+import { events, getEventEffectiveStatus, isEventRegistrationClosed } from '@/lib/content';
 import { formatEventDateWITA } from '@/lib/date';
 
 export function UpcomingEvents() {
@@ -38,6 +38,7 @@ export function UpcomingEvents() {
           {sortedEvents.map((event, index) => {
             const effectiveStatus = getEventEffectiveStatus(event);
             const isCompleted = effectiveStatus === 'completed';
+            const isClosed = isEventRegistrationClosed(event);
 
             return (
               <motion.div
@@ -63,8 +64,8 @@ export function UpcomingEvents() {
                   <span
                     className={`absolute right-3 top-3 rounded-full px-2.5 py-1 text-xs font-semibold backdrop-blur-md shadow-sm ${
                       effectiveStatus === 'upcoming'
-                        ? event.isRegistrationClosed
-                          ? 'bg-amber-500/90 text-white font-bold'
+                        ? isClosed
+                          ? 'bg-rose-500/90 text-white font-bold'
                           : 'bg-emerald-500/90 text-white font-bold'
                         : effectiveStatus === 'ongoing'
                         ? 'bg-amber-500/90 text-white font-bold animate-pulse'
@@ -72,8 +73,8 @@ export function UpcomingEvents() {
                     }`}
                   >
                     {effectiveStatus === 'upcoming'
-                      ? event.isRegistrationClosed
-                        ? 'Ditutup Sementara'
+                      ? isClosed
+                        ? 'Pendaftaran Ditutup'
                         : 'Upcoming'
                       : effectiveStatus === 'ongoing'
                       ? 'Sedang Berlangsung'
@@ -111,12 +112,12 @@ export function UpcomingEvents() {
                       Lihat detail →
                     </Link>
                     {event.regLink && !isCompleted && (
-                      event.isRegistrationClosed ? (
+                      isClosed ? (
                         <Link
                           href={event.regLink}
-                          className="rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300 px-3 py-1.5 text-xs font-bold border border-amber-500/30 transition hover:bg-amber-500/30"
+                          className="rounded-lg bg-muted text-muted-foreground px-3 py-1.5 text-xs font-bold border border-border transition hover:bg-muted/80"
                         >
-                          Ditutup Sementara
+                          Ditutup (Cek Tiket)
                         </Link>
                       ) : event.regLink.startsWith('http') ? (
                         <a

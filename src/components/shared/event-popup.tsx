@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, MapPin, Clock, ArrowRight, Sparkles } from 'lucide-react';
-import { events, getEventEffectiveStatus } from '@/lib/content';
+import { events, getEventEffectiveStatus, isEventRegistrationClosed } from '@/lib/content';
 import { formatEventFullDateWITA } from '@/lib/date';
 
 export function EventPopup() {
@@ -15,6 +15,8 @@ export function EventPopup() {
   const activeEvent = events
     .filter((e) => getEventEffectiveStatus(e) !== 'completed')
     .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())[0];
+
+  const isClosed = activeEvent ? isEventRegistrationClosed(activeEvent) : false;
 
   useEffect(() => {
     setMounted(true);
@@ -108,10 +110,10 @@ export function EventPopup() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 
                 {/* Floating Tags */}
-                {activeEvent.isRegistrationClosed ? (
-                  <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-amber-500/95 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-black shadow-lg backdrop-blur-md">
+                {isClosed ? (
+                  <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-rose-500/95 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white shadow-lg backdrop-blur-md">
                     <Sparkles className="h-3 w-3" />
-                    Ditutup Sementara
+                    Pendaftaran Ditutup
                   </div>
                 ) : (
                   <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-emerald-500/90 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-black shadow-lg backdrop-blur-md">
@@ -177,13 +179,13 @@ export function EventPopup() {
               {/* Action Buttons (Mobile First: stacked & tap-friendly) */}
               <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
                 {activeEvent.regLink && (
-                  activeEvent.isRegistrationClosed ? (
+                  isClosed ? (
                     <Link
                       href={activeEvent.regLink}
                       onClick={handleClose}
-                      className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-amber-500/20 border border-amber-500/30 px-5 py-3.5 text-sm font-bold text-amber-700 dark:text-amber-300 transition hover:bg-amber-500/30 text-center"
+                      className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-muted border border-border/80 px-5 py-3.5 text-sm font-bold text-muted-foreground transition hover:bg-muted/60 text-center"
                     >
-                      <span>Ditutup Sementara (Cek E-Tiket)</span>
+                      <span>Masa Pendaftaran Berakhir (Cek E-Tiket)</span>
                       <ArrowRight className="h-4 w-4" />
                     </Link>
                   ) : activeEvent.regLink.startsWith('http') ? (
