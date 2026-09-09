@@ -19,6 +19,7 @@ import {
   Phone,
   QrCode,
   Trash2,
+  FileSpreadsheet,
 } from 'lucide-react';
 import type { EventRegistration } from '@/lib/db';
 import { QrScannerModal } from '@/components/events/qr-scanner-modal';
@@ -268,12 +269,22 @@ export default function AdminAttendeesPage() {
               Refresh
             </button>
             <a
+              href={`/api/events/admin/attendees?pin=${encodeURIComponent(pin)}&export=xlsx`}
+              download
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 text-xs font-bold transition shadow-md shadow-emerald-600/20 active:scale-95"
+              title="Download data lengkap semua peserta dalam format Microsoft Excel (.xlsx) yang rapi"
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              Export Excel (.xlsx)
+            </a>
+            <a
               href={`/api/events/admin/attendees?pin=${encodeURIComponent(pin)}&export=csv`}
               download
-              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs font-bold text-foreground hover:bg-muted transition shadow-sm"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-semibold text-foreground hover:bg-muted transition shadow-sm"
+              title="Download format CSV"
             >
               <Download className="h-3.5 w-3.5" />
-              Unduh CSV
+              CSV
             </a>
             <button
               onClick={handleLogout}

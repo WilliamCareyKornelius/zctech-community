@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import * as XLSX from 'xlsx';
 import { getRegistrations, checkInRegistration, deleteRegistration, resetCheckInRegistration } from '@/lib/db';
 import { formatDateTimeWITA } from '@/lib/date';
 
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
-  const isExport = searchParams.get('export') === 'csv';
+  const exportType = searchParams.get('export'); // 'xlsx' | 'excel' | 'csv'
   const eventSlug = searchParams.get('event');
 
   let registrations = await getRegistrations();
@@ -28,8 +29,89 @@ export async function GET(request: NextRequest) {
     registrations = registrations.filter((r) => r.eventSlug === eventSlug);
   }
 
-  // Jika minta ekspor file CSV
-  if (isExport) {
+  // 1. EKSPOR EXCEL NATIVE (.xlsx)
+  if (exportType === 'xlsx' || exportType === 'excel') {
+    const wb = XLSX.utils.book_new();
+
+    // Sheet 1: Data Lengkap Peserta
+    const participantRows = registrations.map((r, index) => ({
+      'No': index + 1,
+      'Kode Tiket': r.id,
+      'Nama Lengkap': r.fullName,
+      'Email': r.email,
+      'No. WhatsApp': r.whatsapp,
+      'Asal Institusi / Sekolah': r.institution,
+      'Kategori Peserta': r.category,
+      'NIM / NIS / Identitas': r.studentId || '-',
+      'Status Kehadiran': r.status === 'attended' ? 'Hadir' : 'Belum Hadir',
+      'Waktu Pendaftaran (WITA)': formatDateTimeWITA(r.createdAt),
+      'Waktu Check-In (WITA)': r.checkedInAt ? formatDateTimeWITA(r.checkedInAt) : '-',
+      'Motivasi / Harapan': r.motivation || '-',
+    }));
+
+    const wsParticipants = XLSX.utils.json_to_sheet(participantRows);
+
+    // Atur lebar kolom agar rapi, lega, dan tidak terpotong (auto-fit generous width)
+    wsParticipants['!cols'] = [
+      { wch: 6 },   // No
+      { wch: 22 },  // Kode Tiket
+      { wch: 30 },  // Nama Lengkap
+      { wch: 32 },  // Email
+      { wch: 18 },  // WhatsApp
+      { wch: 35 },  // Asal Institusi / Sekolah
+      { wch: 28 },  // Kategori Peserta
+      { wch: 20 },  // NIM / NIS
+      { wch: 18 },  // Status Kehadiran
+      { wch: 25 },  // Waktu Pendaftaran
+      { wch: 25 },  // Waktu Check-In
+      { wch: 50 },  // Motivasi / Harapan
+    ];
+
+    XLSX.utils.book_append_sheet(wb, wsParticipants, 'Daftar Peserta');
+
+    // Sheet 2: Ringkasan & Statistik Panitia
+    const totalCount = registrations.length;
+    const attendedCount = registrations.filter((r) => r.status === 'attended').length;
+    const pendingCount = totalCount - attendedCount;
+    const mhsCount = registrations.filter((r) => r.category.toLowerCase().includes('mahasiswa')).length;
+    const siswaCount = registrations.filter((r) => r.category.toLowerCase().includes('pelajar') || r.category.toLowerCase().includes('siswa')).length;
+    const umumCount = registrations.filter((r) => r.category.toLowerCase().includes('umum')).length;
+
+    const summaryRows = [
+      { 'Indikator': 'Nama Kegiatan', 'Keterangan': 'TECH-FUTURE EXPO 2026' },
+      { 'Indikator': 'Jadwal Acara', 'Keterangan': 'Selasa, 15 September 2026 (14.00 - 16.30 WITA)' },
+      { 'Indikator': 'Lokasi Pelaksanaan', 'Keterangan': 'Aula Kampus Politani Samarinda' },
+      { 'Indikator': 'Waktu Ekspor Laporan', 'Keterangan': formatDateTimeWITA(new Date().toISOString()) },
+      { 'Indikator': '------------------------', 'Keterangan': '------------------------' },
+      { 'Indikator': 'Total Pendaftar', 'Keterangan': `${totalCount} orang` },
+      { 'Indikator': 'Peserta Sudah Hadir (Checked-In)', 'Keterangan': `${attendedCount} orang` },
+      { 'Indikator': 'Peserta Belum Hadir', 'Keterangan': `${pendingCount} orang` },
+      { 'Indikator': '------------------------', 'Keterangan': '------------------------' },
+      { 'Indikator': 'Jumlah Mahasiswa', 'Keterangan': `${mhsCount} orang` },
+      { 'Indikator': 'Jumlah Siswa / Pelajar', 'Keterangan': `${siswaCount} orang` },
+      { 'Indikator': 'Jumlah Umum / Profesional', 'Keterangan': `${umumCount} orang` },
+    ];
+
+    const wsSummary = XLSX.utils.json_to_sheet(summaryRows);
+    wsSummary['!cols'] = [
+      { wch: 32 },
+      { wch: 45 },
+    ];
+
+    XLSX.utils.book_append_sheet(wb, wsSummary, 'Ringkasan & Statistik');
+
+    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+    return new NextResponse(buffer, {
+      headers: {
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': `attachment; filename="Data-Peserta-${eventSlug || 'TECH-FUTURE-EXPO-2026'}-${Date.now()}.xlsx"`,
+      },
+    });
+  }
+
+  // 2. EKSPOR FILE CSV (dengan UTF-8 BOM agar rapi saat dibuka di Excel)
+  if (exportType === 'csv') {
     const headers = [
       'No',
       'Kode Tiket',
@@ -42,6 +124,7 @@ export async function GET(request: NextRequest) {
       'Status Kehadiran',
       'Waktu Pendaftaran (WITA)',
       'Waktu Check-In (WITA)',
+      'Motivasi / Catatan',
     ];
 
     const rows = registrations.map((r, index) => [
@@ -53,12 +136,14 @@ export async function GET(request: NextRequest) {
       `"${r.institution.replace(/"/g, '""')}"`,
       `"${r.category.replace(/"/g, '""')}"`,
       `"${(r.studentId || '-').replace(/"/g, '""')}"`,
-      `"${r.status === 'attended' ? 'Hadir' : 'Terkonfirmasi'}"`,
+      `"${r.status === 'attended' ? 'Hadir' : 'Belum Hadir'}"`,
       `"${formatDateTimeWITA(r.createdAt)}"`,
       `"${r.checkedInAt ? formatDateTimeWITA(r.checkedInAt) : '-'}"`,
+      `"${(r.motivation || '-').replace(/"/g, '""')}"`,
     ]);
 
-    const csvContent = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
+    // Tambahkan UTF-8 BOM (\uFEFF) agar Microsoft Excel membuka aksen & karakter secara sempurna
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
 
     return new NextResponse(csvContent, {
       headers: {
