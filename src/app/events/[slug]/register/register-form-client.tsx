@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import type { Event } from '@/lib/types';
 import type { EventRegistration } from '@/lib/db';
+import { REGISTERED_SCHOOLS } from '@/lib/content';
 import { formatEventFullDateWITA, formatDateTimeWITA } from '@/lib/date';
 
 export function RegisterFormClient({ event }: { event: Event }) {
@@ -35,6 +36,9 @@ export function RegisterFormClient({ event }: { event: Event }) {
     studentId: '',
     motivation: '',
   });
+
+  const [selectedSchool, setSelectedSchool] = useState('');
+  const [customSchool, setCustomSchool] = useState('');
 
   const isPendamping =
     formData.category === 'Guru Pendamping' || formData.category === 'Pendamping';
@@ -513,7 +517,7 @@ export function RegisterFormClient({ event }: { event: Event }) {
                     </p>
                   </div>
 
-                  {/* 5. Asal Sekolah */}
+                  {/* 5. Asal Sekolah (Drop Box 19 Sekolah) */}
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-foreground mb-1.5">
                       {isPendamping ? (
@@ -522,26 +526,67 @@ export function RegisterFormClient({ event }: { event: Event }) {
                         </>
                       ) : (
                         <>
-                          Asal Sekolah (SMA / SMK / MA) <span className="text-red-500">*</span>
+                          Asal Sekolah (SMK / SMA) <span className="text-red-500">*</span>
                         </>
                       )}
                     </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.institution}
-                      onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
-                      placeholder={
-                        isPendamping
-                          ? 'Contoh: SMK Negeri 5 Samarinda (Guru Pendamping)'
-                          : 'Contoh: SMK Negeri 7 Samarinda'
-                      }
-                      className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition"
-                    />
-                    <p className="mt-1 text-[11px] text-muted-foreground">
-                      {isPendamping
-                        ? 'Tuliskan nama lengkap sekolah rombongan yang bapak/ibu dampingi.'
-                        : 'Tuliskan nama lengkap sekolah asal Anda.'}
+                    <div className="relative">
+                      <select
+                        required
+                        value={selectedSchool}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSelectedSchool(val);
+                          if (val !== 'Lainnya') {
+                            setFormData((prev) => ({ ...prev, institution: val }));
+                          } else {
+                            setFormData((prev) => ({ ...prev, institution: customSchool }));
+                          }
+                        }}
+                        className="w-full appearance-none rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm font-semibold text-foreground focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition cursor-pointer pr-10"
+                      >
+                        <option value="" disabled className="bg-card text-muted-foreground">
+                          -- Pilih Asal Sekolah (19 SMK Terdaftar) --
+                        </option>
+                        {REGISTERED_SCHOOLS.map((sch, idx) => (
+                          <option key={sch} value={sch} className="bg-card text-foreground py-2">
+                            {idx + 1}. {sch}
+                          </option>
+                        ))}
+                        <option value="Lainnya" className="bg-card text-foreground py-2">
+                          Lainnya (Sekolah Lain di Luar Daftar)
+                        </option>
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-muted-foreground">
+                        <ChevronDown className="h-4 w-4" />
+                      </div>
+                    </div>
+
+                    {selectedSchool === 'Lainnya' && (
+                      <div className="mt-2.5">
+                        <input
+                          type="text"
+                          required
+                          value={customSchool}
+                          onChange={(e) => {
+                            setCustomSchool(e.target.value);
+                            setFormData((prev) => ({ ...prev, institution: e.target.value }));
+                          }}
+                          placeholder={
+                            isPendamping
+                              ? 'Tuliskan nama sekolah yang didampingi...'
+                              : 'Tuliskan nama lengkap sekolah asal Anda...'
+                          }
+                          className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition"
+                        />
+                      </div>
+                    )}
+
+                    <p className="mt-1.5 text-[11px] text-muted-foreground flex items-center gap-1.5">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                      <span>
+                        Tersedia 19 SMK terdaftar di Samarinda. Guru pendamping & siswa tinggal memilih tanpa perlu mengetik manual.
+                      </span>
                     </p>
                   </div>
 

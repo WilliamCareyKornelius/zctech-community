@@ -23,6 +23,31 @@ export const siteConfig = {
   },
 };
 
+/**
+ * Daftar 19 Sekolah Menengah Kejuruan (SMK) rujukan & undangan resmi di Kota Samarinda
+ */
+export const REGISTERED_SCHOOLS = [
+  'SMK Negeri 1 Samarinda',
+  'SMK Negeri 5 Samarinda',
+  'SMK Negeri 7 Samarinda',
+  'SMK Negeri 10 Samarinda',
+  'SMK Negeri 11 Samarinda',
+  'SMK Negeri 12 Samarinda',
+  'SMK Negeri 14 Samarinda',
+  'SMK Negeri 15 Samarinda',
+  'SMK Negeri 16 Samarinda',
+  'SMKS Kesehatan Samarinda',
+  'SMKS Muhammadiyah 1 Samarinda',
+  'SMKS Pemuda Samarinda',
+  'SMKS YPS Samarinda',
+  'SMKS TI AIRLANGGA',
+  'SMKS Plus Melati Samarinda',
+  'SMKS TI LABBAIKA',
+  'SMKS Terpadu Madina Samarinda',
+  'SMKS Istiqomah Muhammadiyah 4 Samarinda',
+  'SMKS Nuri Samarinda',
+] as const;
+
 export const coreValues: CoreValue[] = [
   {
     title: 'Open Knowledge',
