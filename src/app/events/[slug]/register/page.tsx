@@ -5,9 +5,8 @@ import { RegisterFormClient } from './register-form-client';
 
 type Params = Promise<{ slug: string }>;
 
-export async function generateStaticParams() {
-  return events.map((event) => ({ slug: event.slug }));
-}
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;

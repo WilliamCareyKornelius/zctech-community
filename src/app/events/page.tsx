@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   openGraph: { images: ['/kegiatan/img-01.jpg'] },
 };
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default function EventsPage() {
   return (
     <>
