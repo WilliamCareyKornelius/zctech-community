@@ -79,7 +79,15 @@ export async function GET(request: NextRequest) {
         !r.category.toLowerCase().includes('mahasiswa') &&
         (r.category.toLowerCase().includes('pelajar') || r.category.toLowerCase().includes('siswa'))
     ).length;
-    const umumCount = registrations.filter((r) => r.category.toLowerCase().includes('umum')).length;
+    const pendampingCount = registrations.filter(
+      (r) => r.category.toLowerCase().includes('pendamping') || r.category.toLowerCase().includes('guru')
+    ).length;
+    const umumCount = registrations.filter(
+      (r) =>
+        r.category.toLowerCase().includes('umum') &&
+        !r.category.toLowerCase().includes('pendamping') &&
+        !r.category.toLowerCase().includes('guru')
+    ).length;
 
     const summaryRows = [
       { 'Indikator': 'Nama Kegiatan', 'Keterangan': 'TECH-FUTURE EXPO 2026' },
@@ -91,8 +99,9 @@ export async function GET(request: NextRequest) {
       { 'Indikator': 'Peserta Sudah Hadir (Checked-In)', 'Keterangan': `${attendedCount} orang` },
       { 'Indikator': 'Peserta Belum Hadir', 'Keterangan': `${pendingCount} orang` },
       { 'Indikator': '------------------------', 'Keterangan': '------------------------' },
-      { 'Indikator': 'Jumlah Mahasiswa', 'Keterangan': `${mhsCount} orang` },
       { 'Indikator': 'Jumlah Siswa / Pelajar', 'Keterangan': `${siswaCount} orang` },
+      { 'Indikator': 'Jumlah Guru / Pendamping', 'Keterangan': `${pendampingCount} orang` },
+      { 'Indikator': 'Jumlah Mahasiswa', 'Keterangan': `${mhsCount} orang` },
       { 'Indikator': 'Jumlah Umum / Profesional', 'Keterangan': `${umumCount} orang` },
     ];
 

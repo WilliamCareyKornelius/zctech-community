@@ -19,6 +19,7 @@ import {
   Lock,
   Search,
   AlertTriangle,
+  ChevronDown,
 } from 'lucide-react';
 import type { Event } from '@/lib/types';
 import type { EventRegistration } from '@/lib/db';
@@ -30,10 +31,12 @@ export function RegisterFormClient({ event }: { event: Event }) {
     email: '',
     whatsapp: '',
     institution: '',
-    category: 'Mahasiswa Politani Samarinda',
+    category: 'Siswa',
     studentId: '',
     motivation: '',
   });
+
+  const isPendamping = formData.category === 'Pendamping';
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -247,7 +250,7 @@ export function RegisterFormClient({ event }: { event: Event }) {
                         <span className="font-bold text-foreground">{ticketResult.fullName}</span>
                       </div>
                       <div className="rounded-xl border border-border bg-muted/30 p-3">
-                        <span className="text-[11px] text-muted-foreground block">Asal Institusi</span>
+                        <span className="text-[11px] text-muted-foreground block">Asal Sekolah / Institusi</span>
                         <span className="font-bold text-foreground">{ticketResult.institution}</span>
                       </div>
                       <div className="rounded-xl border border-border bg-muted/30 p-3">
@@ -264,7 +267,7 @@ export function RegisterFormClient({ event }: { event: Event }) {
                       </div>
                       {ticketResult.studentId && (
                         <div className="sm:col-span-2 rounded-xl border border-border bg-muted/30 p-3">
-                          <span className="text-[11px] text-muted-foreground block">NIM / Identitas</span>
+                          <span className="text-[11px] text-muted-foreground block">NISN / NIP / Identitas</span>
                           <span className="font-bold text-foreground">{ticketResult.studentId}</span>
                         </div>
                       )}
@@ -475,80 +478,120 @@ export function RegisterFormClient({ event }: { event: Event }) {
                     />
                   </div>
 
-                  {/* 4. Asal Institusi / Kampus */}
+                  {/* 4. Kategori Pendaftar (Dropdown) */}
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-foreground mb-1.5">
-                      Asal Institusi / Kampus / Sekolah <span className="text-red-500">*</span>
+                      Kategori Pendaftar <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        className="w-full appearance-none rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm font-semibold text-foreground focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition cursor-pointer pr-10"
+                      >
+                        <option value="Siswa" className="bg-card text-foreground py-2">
+                          Siswa (Pelajar SMK / SMA)
+                        </option>
+                        <option value="Pendamping" className="bg-card text-foreground py-2">
+                          Pendamping (Guru Pendamping / Pembina)
+                        </option>
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-muted-foreground">
+                        <ChevronDown className="h-4 w-4" />
+                      </div>
+                    </div>
+                    <p className="mt-1.5 text-[11px] text-muted-foreground flex items-center gap-1.5">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      {isPendamping
+                        ? 'Khusus untuk bapak/ibu guru pendamping atau pembina rombongan sekolah.'
+                        : 'Untuk perwakilan siswa/siswi sekolah SMK & SMA.'}
+                    </p>
+                  </div>
+
+                  {/* 5. Asal Sekolah */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-foreground mb-1.5">
+                      {isPendamping ? (
+                        <>
+                          Asal Sekolah / Instansi yang Didampingi <span className="text-red-500">*</span>
+                        </>
+                      ) : (
+                        <>
+                          Asal Sekolah (SMA / SMK / MA) <span className="text-red-500">*</span>
+                        </>
+                      )}
                     </label>
                     <input
                       type="text"
                       required
                       value={formData.institution}
                       onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
-                      placeholder="Contoh: Politani Samarinda / Universitas Mulawarman / Umum"
+                      placeholder={
+                        isPendamping
+                          ? 'Contoh: SMK Negeri 5 Samarinda (Guru Pendamping)'
+                          : 'Contoh: SMK Negeri 7 Samarinda'
+                      }
                       className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition"
                     />
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      {isPendamping
+                        ? 'Tuliskan nama lengkap sekolah rombongan yang bapak/ibu dampingi.'
+                        : 'Tuliskan nama lengkap sekolah asal Anda.'}
+                    </p>
                   </div>
 
-                  {/* 5. Kategori Peserta */}
+                  {/* 6. Nomor Identitas / NISN / NIP */}
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-foreground mb-1.5">
-                      Kategori Peserta <span className="text-red-500">*</span>
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      {[
-                        'Mahasiswa Politani Samarinda',
-                        'Mahasiswa Kampus Lain',
-                        'Pelajar SMA / SMK',
-                        'Umum / Profesional',
-                      ].map((item) => (
-                        <label
-                          key={item}
-                          className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition text-xs font-semibold ${
-                            formData.category === item
-                              ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                              : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/70'
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="category"
-                            value={item}
-                            checked={formData.category === item}
-                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                            className="text-emerald-500 focus:ring-emerald-500"
-                          />
-                          <span>{item}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* 6. NIM / NIS (Opsional) */}
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-foreground mb-1.5">
-                      NIM / NIS / Identitas <span className="text-muted-foreground font-normal">(Opsional)</span>
+                      {isPendamping ? (
+                        <>
+                          NIP / NUPTK / No. Identitas Guru{' '}
+                          <span className="text-muted-foreground font-normal">(Opsional)</span>
+                        </>
+                      ) : (
+                        <>
+                          NISN / NIS / Kelas{' '}
+                          <span className="text-muted-foreground font-normal">(Opsional)</span>
+                        </>
+                      )}
                     </label>
                     <input
                       type="text"
                       value={formData.studentId}
                       onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-                      placeholder="Masukkan NIM jika mahasiswa"
+                      placeholder={
+                        isPendamping
+                          ? 'Masukkan NIP atau NUPTK jika berkenan'
+                          : 'Contoh: XII TKJ 1 / 0051234567'
+                      }
                       className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition"
                     />
                   </div>
 
-                  {/* 7. Motivasi / Pertanyaan untuk Pemateri */}
+                  {/* 7. Motivasi / Catatan Rombongan */}
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-foreground mb-1.5">
-                      Motivasi / Pertanyaan untuk Pemateri{' '}
-                      <span className="text-muted-foreground font-normal">(Opsional)</span>
+                      {isPendamping ? (
+                        <>
+                          Catatan Rombongan / Keterangan Pendamping{' '}
+                          <span className="text-muted-foreground font-normal">(Opsional)</span>
+                        </>
+                      ) : (
+                        <>
+                          Harapan / Pertanyaan untuk Pemateri{' '}
+                          <span className="text-muted-foreground font-normal">(Opsional)</span>
+                        </>
+                      )}
                     </label>
                     <textarea
                       rows={3}
                       value={formData.motivation}
                       onChange={(e) => setFormData({ ...formData, motivation: e.target.value })}
-                      placeholder="Tuliskan harapan Anda atau pertanyaan yang ingin dibahas saat seminar..."
+                      placeholder={
+                        isPendamping
+                          ? 'Contoh: Membawa rombongan siswa jurusan RPL/TKJ, koordinasi pendamping...'
+                          : 'Tuliskan harapan Anda atau pertanyaan yang ingin dibahas saat seminar...'
+                      }
                       className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition"
                     />
                   </div>
