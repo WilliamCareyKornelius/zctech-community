@@ -78,6 +78,8 @@ export const events: Event[] = [
     location: 'Aula Kampus Politani Samarinda',
     type: 'meetup',
     status: 'upcoming',
+    isRegistrationClosed: true,
+    registrationClosedMessage: 'Pendaftaran peserta untuk kegiatan ini sementara ditutup oleh panitia. Data peserta yang telah terdaftar tetap tersimpan aman dan tiket tetap berlaku untuk hari-H.',
     regLink: '/events/tech-future-expo-2026/register',
     speaker: 'Muhammad Kevin Adli Pratama',
     price: 'GRATIS untuk Umum',

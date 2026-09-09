@@ -108,10 +108,17 @@ export function EventPopup() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 
                 {/* Floating Tags */}
-                <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-emerald-500/90 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-black shadow-lg backdrop-blur-md">
-                  <Sparkles className="h-3 w-3 animate-spin" />
-                  Upcoming Event
-                </div>
+                {activeEvent.isRegistrationClosed ? (
+                  <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-amber-500/95 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-black shadow-lg backdrop-blur-md">
+                    <Sparkles className="h-3 w-3" />
+                    Ditutup Sementara
+                  </div>
+                ) : (
+                  <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-emerald-500/90 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-black shadow-lg backdrop-blur-md">
+                    <Sparkles className="h-3 w-3 animate-spin" />
+                    Upcoming Event
+                  </div>
+                )}
 
                 {activeEvent.price && (
                   <div className="absolute bottom-3 left-3 rounded-lg bg-black/70 px-2.5 py-1 text-xs font-bold text-emerald-400 border border-emerald-500/40 backdrop-blur-md">
@@ -170,7 +177,16 @@ export function EventPopup() {
               {/* Action Buttons (Mobile First: stacked & tap-friendly) */}
               <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
                 {activeEvent.regLink && (
-                  activeEvent.regLink.startsWith('http') ? (
+                  activeEvent.isRegistrationClosed ? (
+                    <Link
+                      href={activeEvent.regLink}
+                      onClick={handleClose}
+                      className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-amber-500/20 border border-amber-500/30 px-5 py-3.5 text-sm font-bold text-amber-700 dark:text-amber-300 transition hover:bg-amber-500/30 text-center"
+                    >
+                      <span>Ditutup Sementara (Cek E-Tiket)</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  ) : activeEvent.regLink.startsWith('http') ? (
                     <a
                       href={activeEvent.regLink}
                       target="_blank"

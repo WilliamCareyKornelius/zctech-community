@@ -40,14 +40,18 @@ export function EventsList({ events }: { events: Event[] }) {
                   <span
                     className={`absolute right-3 top-3 rounded-full px-2.5 py-1 text-xs font-semibold backdrop-blur-md shadow-sm ${
                       effectiveStatus === 'upcoming'
-                        ? 'bg-emerald-500/90 text-white font-bold'
+                        ? event.isRegistrationClosed
+                          ? 'bg-amber-500/90 text-white font-bold'
+                          : 'bg-emerald-500/90 text-white font-bold'
                         : effectiveStatus === 'ongoing'
                         ? 'bg-amber-500/90 text-white font-bold animate-pulse'
                         : 'bg-zinc-800/80 text-zinc-300'
                     }`}
                   >
                     {effectiveStatus === 'upcoming'
-                      ? 'Upcoming'
+                      ? event.isRegistrationClosed
+                        ? 'Ditutup Sementara'
+                        : 'Upcoming'
                       : effectiveStatus === 'ongoing'
                       ? 'Sedang Berlangsung'
                       : 'Selesai'}
@@ -84,14 +88,21 @@ export function EventsList({ events }: { events: Event[] }) {
                       Lihat detail →
                     </Link>
                     {event.regLink && !isCompleted && (
-                      <a
-                        href={event.regLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-600"
-                      >
-                        Daftar
-                      </a>
+                      event.isRegistrationClosed ? (
+                        <Link
+                          href={event.regLink}
+                          className="rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300 px-3 py-1.5 text-xs font-bold border border-amber-500/30 transition hover:bg-amber-500/30"
+                        >
+                          Ditutup Sementara
+                        </Link>
+                      ) : (
+                        <Link
+                          href={event.regLink}
+                          className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-600"
+                        >
+                          Daftar
+                        </Link>
+                      )
                     )}
                   </div>
                 </div>

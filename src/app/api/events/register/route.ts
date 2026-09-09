@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. Cek apakah sudah pernah terdaftar
+    // 5. Cek apakah sudah pernah terdaftar (peserta lama tetap bisa akses e-tiketnya)
     const existing = await findRegistrationByEmail(eventSlug, email);
     if (existing) {
       // Re-kirim email jika diminta
@@ -92,7 +92,19 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 6. Generate Ticket ID & QR Code dengan Error Correction Level M untuk kemudahan scan
+    // 6. Validasi jika pendaftaran ditutup sementara
+    if (event.isRegistrationClosed) {
+      return NextResponse.json(
+        {
+          error:
+            event.registrationClosedMessage ||
+            'Pendaftaran untuk kegiatan ini sementara ditutup oleh panitia.',
+        },
+        { status: 400 }
+      );
+    }
+
+    // 7. Generate Ticket ID & QR Code dengan Error Correction Level M untuk kemudahan scan
     const prefix = eventSlug.toLowerCase().includes('workshop') ? 'ZCT-WS' : 'ZCT-EXP';
     const ticketId = generateTicketId(prefix);
     const verifyUrl = `https://community.zctech.id/events/verify?ticket=${encodeURIComponent(ticketId)}`;

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, MapPin } from 'lucide-react';
 import { events, siteConfig, getEventEffectiveStatus } from '@/lib/content';
@@ -90,20 +91,29 @@ export function EventCountdown() {
         </div>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <a
-            href={event.regLink || siteConfig.discordInvite}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-400 px-6 py-3 text-sm font-bold text-black transition hover:bg-emerald-300"
-          >
-            Daftar / Gabung
-          </a>
-          <a
+          {event.isRegistrationClosed ? (
+            <Link
+              href={event.regLink || `/events/${event.slug}`}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-amber-500/20 border border-amber-500/30 px-6 py-3 text-sm font-bold text-amber-700 dark:text-amber-300 transition hover:bg-amber-500/30"
+            >
+              🔒 Pendaftaran Ditutup Sementara
+            </Link>
+          ) : (
+            <a
+              href={event.regLink || siteConfig.discordInvite}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-400 px-6 py-3 text-sm font-bold text-black transition hover:bg-emerald-300"
+            >
+              Daftar / Gabung
+            </a>
+          )}
+          <Link
             href={`/events/${event.slug}`}
             className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-muted px-6 py-3 text-sm font-semibold text-foreground transition hover:bg-secondary"
           >
             Detail Kegiatan
-          </a>
+          </Link>
         </div>
       </div>
     </section>

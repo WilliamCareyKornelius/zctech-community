@@ -125,7 +125,7 @@ export default async function EventDetailPage({ params }: { params: Params }) {
           <div className="space-y-6">
             <div className="rounded-2xl border border-border bg-background p-6">
               <h3 className="font-bold text-foreground text-sm uppercase tracking-wider text-muted-foreground">Status Kegiatan</h3>
-              <div className="mt-3">
+              <div className="mt-3 flex flex-wrap gap-2">
                 <span
                   className={`inline-block rounded-full px-3.5 py-1.5 text-xs font-bold ${
                     effectiveStatus === 'upcoming'
@@ -141,7 +141,17 @@ export default async function EventDetailPage({ params }: { params: Params }) {
                     ? '● Sedang Berlangsung'
                     : '✕ Kegiatan Telah Selesai'}
                 </span>
+                {event.isRegistrationClosed && !isCompleted && (
+                  <span className="inline-block rounded-full bg-amber-500/20 px-3.5 py-1.5 text-xs font-bold text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                    🔒 Pendaftaran Ditutup Sementara
+                  </span>
+                )}
               </div>
+              {event.isRegistrationClosed && !isCompleted && (
+                <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
+                  {event.registrationClosedMessage || 'Pendaftaran peserta untuk kegiatan ini sementara ditutup oleh panitia.'}
+                </p>
+              )}
               {isCompleted && (
                 <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
                   Pendaftaran untuk kegiatan ini telah ditutup karena acara sudah terlaksana.
@@ -157,7 +167,14 @@ export default async function EventDetailPage({ params }: { params: Params }) {
             )}
 
             {event.regLink && !isCompleted && (
-              event.regLink.startsWith('http') ? (
+              event.isRegistrationClosed ? (
+                <Link
+                  href={event.regLink}
+                  className="block w-full rounded-xl bg-amber-500/15 border border-amber-500/30 py-3.5 text-center font-bold text-amber-700 dark:text-amber-300 transition hover:bg-amber-500/25"
+                >
+                  Pendaftaran Ditutup Sementara (Cek E-Tiket)
+                </Link>
+              ) : event.regLink.startsWith('http') ? (
                 <a
                   href={event.regLink}
                   target="_blank"

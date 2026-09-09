@@ -11,6 +11,8 @@ export interface Event {
   type: 'workshop' | 'meetup' | 'webinar' | 'competition';
   status: 'upcoming' | 'ongoing' | 'completed';
   regLink?: string;
+  isRegistrationClosed?: boolean;
+  registrationClosedMessage?: string;
   speaker?: string;
   price?: string;
   topics?: string[];
