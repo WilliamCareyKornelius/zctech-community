@@ -74,7 +74,11 @@ export async function GET(request: NextRequest) {
     const attendedCount = registrations.filter((r) => r.status === 'attended').length;
     const pendingCount = totalCount - attendedCount;
     const mhsCount = registrations.filter((r) => r.category.toLowerCase().includes('mahasiswa')).length;
-    const siswaCount = registrations.filter((r) => r.category.toLowerCase().includes('pelajar') || r.category.toLowerCase().includes('siswa')).length;
+    const siswaCount = registrations.filter(
+      (r) =>
+        !r.category.toLowerCase().includes('mahasiswa') &&
+        (r.category.toLowerCase().includes('pelajar') || r.category.toLowerCase().includes('siswa'))
+    ).length;
     const umumCount = registrations.filter((r) => r.category.toLowerCase().includes('umum')).length;
 
     const summaryRows = [
