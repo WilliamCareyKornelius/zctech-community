@@ -36,7 +36,8 @@ export function RegisterFormClient({ event }: { event: Event }) {
     motivation: '',
   });
 
-  const isPendamping = formData.category === 'Pendamping';
+  const isPendamping =
+    formData.category === 'Guru Pendamping' || formData.category === 'Pendamping';
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -492,8 +493,8 @@ export function RegisterFormClient({ event }: { event: Event }) {
                         <option value="Siswa" className="bg-card text-foreground py-2">
                           Siswa (Pelajar SMK / SMA)
                         </option>
-                        <option value="Pendamping" className="bg-card text-foreground py-2">
-                          Pendamping (Guru Pendamping / Pembina)
+                        <option value="Guru Pendamping" className="bg-card text-foreground py-2">
+                          Guru Pendamping (Pembina / Pendamping Sekolah)
                         </option>
                       </select>
                       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-muted-foreground">
