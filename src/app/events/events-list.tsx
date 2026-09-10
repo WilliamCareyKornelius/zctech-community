@@ -2,22 +2,34 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin } from 'lucide-react';
+import { Calendar, MapPin, Users } from 'lucide-react';
 import { getEventEffectiveStatus, isEventRegistrationClosed } from '@/lib/content';
 import { formatEventWithTimeWITA } from '@/lib/date';
 import type { Event } from '@/lib/types';
 
 export function EventsList({ events }: { events: Event[] }) {
+  if (events.length === 0) {
+    return (
+      <div className="py-24 text-center">
+        <p className="text-muted-foreground">Belum ada kegiatan yang dijadwalkan.</p>
+      </div>
+    );
+  }
+
   const formatDate = (iso: string) => formatEventWithTimeWITA(iso);
 
   return (
-    <section className="w-full bg-muted px-4 py-16 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <motion.div layout className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <section className="w-full bg-background px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl">
+        <div className="grid gap-6 sm:grid-cols-2">
           {events.map((event) => {
             const effectiveStatus = getEventEffectiveStatus(event);
             const isCompleted = effectiveStatus === 'completed';
             const isClosed = isEventRegistrationClosed(event);
+            const isQuotaFull =
+              event.maxParticipants !== undefined &&
+              event.currentParticipants !== undefined &&
+              event.currentParticipants >= event.maxParticipants;
 
             return (
               <motion.div
@@ -51,7 +63,9 @@ export function EventsList({ events }: { events: Event[] }) {
                   >
                     {effectiveStatus === 'upcoming'
                       ? isClosed
-                        ? 'Pendaftaran Ditutup'
+                        ? isQuotaFull
+                          ? 'Kuota Penuh'
+                          : 'Pendaftaran Ditutup'
                         : 'Upcoming'
                       : effectiveStatus === 'ongoing'
                       ? 'Sedang Berlangsung'
@@ -76,6 +90,12 @@ export function EventsList({ events }: { events: Event[] }) {
                       <MapPin className="h-3.5 w-3.5 text-emerald-500" />
                       {event.location}
                     </span>
+                    {event.maxParticipants && (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20 px-2 py-1 font-semibold">
+                        <Users className="h-3.5 w-3.5 text-teal-500" />
+                        Kuota: {event.maxParticipants} Peserta {event.currentParticipants !== undefined ? `(${Math.max(0, event.maxParticipants - event.currentParticipants)} sisa)` : ''}
+                      </span>
+                    )}
                   </div>
                   <div className="mt-5 flex items-center justify-between pt-3 border-t border-border/50">
                     <Link
@@ -94,7 +114,7 @@ export function EventsList({ events }: { events: Event[] }) {
                           href={event.regLink}
                           className="rounded-lg bg-muted text-muted-foreground px-3 py-1.5 text-xs font-bold border border-border transition hover:bg-muted/80"
                         >
-                          Ditutup (Cek Tiket)
+                          {isQuotaFull ? 'Kuota Penuh' : 'Ditutup (Cek Tiket)'}
                         </Link>
                       ) : (
                         <Link
@@ -110,7 +130,7 @@ export function EventsList({ events }: { events: Event[] }) {
               </motion.div>
             );
           })}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

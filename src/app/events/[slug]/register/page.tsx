@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { events, isEventRegistrationClosed } from '@/lib/content';
+import { getRegistrationCountByEvent } from '@/lib/db';
 import { RegisterFormClient } from './register-form-client';
 
 type Params = Promise<{ slug: string }>;
@@ -32,10 +33,27 @@ export default async function EventRegisterPage({ params }: { params: Params }) 
     notFound();
   }
 
+  const currentCount = await getRegistrationCountByEvent(event.slug);
+  const isQuotaFull = event.maxParticipants !== undefined && currentCount >= event.maxParticipants;
+  const isClosed = isEventRegistrationClosed(event, currentCount);
+
+  let closedMessage = event.registrationClosedMessage;
+  if (isQuotaFull) {
+    closedMessage = `Mohon maaf, kuota pendaftaran untuk kegiatan ini telah terpenuhi (${currentCount} / ${event.maxParticipants} peserta). Pendaftaran resmi telah ditutup oleh panitia.`;
+  }
+
   const effectiveEvent = {
     ...event,
-    isRegistrationClosed: isEventRegistrationClosed(event),
+    currentParticipants: currentCount,
+    isRegistrationClosed: isClosed,
+    registrationClosedMessage: closedMessage,
   };
 
-  return <RegisterFormClient event={effectiveEvent} />;
+  return (
+    <RegisterFormClient
+      event={effectiveEvent}
+      isQuotaFull={isQuotaFull}
+      currentCount={currentCount}
+    />
+  );
 }

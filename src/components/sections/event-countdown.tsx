@@ -43,10 +43,27 @@ function useCountdown(target: string) {
 export function EventCountdown() {
   const event = getNearestUpcoming();
   const { days, hours, minutes, seconds } = useCountdown(event?.eventDate ?? '');
+  const [quotaData, setQuotaData] = useState<{
+    isQuotaFull: boolean;
+    isRegistrationClosed: boolean;
+    remainingSlots?: number;
+    maxParticipants?: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!event) return;
+    fetch(`/api/events/quota?slug=${event.slug}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && !data.error) setQuotaData(data);
+      })
+      .catch(() => {});
+  }, [event]);
 
   if (!event) return null;
 
-  const isClosed = isEventRegistrationClosed(event);
+  const isClosed = quotaData?.isRegistrationClosed ?? isEventRegistrationClosed(event);
+  const isQuotaFull = quotaData?.isQuotaFull ?? false;
   const formatDate = (iso: string) => formatEventWithTimeWITA(iso);
 
   return (
@@ -68,6 +85,11 @@ export function EventCountdown() {
             <MapPin className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
             <span>{event.location}</span>
           </div>
+          {event.maxParticipants && (
+            <div className="flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3 py-0.5 text-xs font-semibold text-teal-700 dark:text-teal-300">
+              <span>👥 Kuota: {event.maxParticipants} Peserta {quotaData?.remainingSlots !== undefined ? `(${quotaData.remainingSlots} slot tersisa)` : ''}</span>
+            </div>
+          )}
         </div>
 
         <div className="mt-8 grid grid-cols-4 gap-3 sm:gap-6">
@@ -97,7 +119,7 @@ export function EventCountdown() {
               href={event.regLink || `/events/${event.slug}`}
               className="inline-flex items-center justify-center gap-2 rounded-full bg-muted border border-border/80 px-6 py-3 text-sm font-bold text-muted-foreground transition hover:bg-muted/60"
             >
-              🔒 Pendaftaran Ditutup (Cek E-Tiket)
+              {isQuotaFull ? '🔒 Kuota Penuh (Cek E-Tiket)' : '🔒 Pendaftaran Ditutup (Cek E-Tiket)'}
             </Link>
           ) : (
             <a

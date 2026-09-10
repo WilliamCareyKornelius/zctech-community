@@ -1,10 +1,32 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin } from 'lucide-react';
+import { Calendar, MapPin, Users } from 'lucide-react';
 import { events, getEventEffectiveStatus, isEventRegistrationClosed } from '@/lib/content';
 import { formatEventDateWITA } from '@/lib/date';
 
 export function UpcomingEvents() {
+  const [quotas, setQuotas] = useState<
+    Record<string, { isQuotaFull: boolean; isRegistrationClosed: boolean; remainingSlots: number }>
+  >({});
+
+  useEffect(() => {
+    events.forEach((e) => {
+      if (e.maxParticipants) {
+        fetch(`/api/events/quota?slug=${e.slug}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data && !data.error) {
+              setQuotas((prev) => ({ ...prev, [e.slug]: data }));
+            }
+          })
+          .catch(() => {});
+      }
+    });
+  }, []);
+
   const sortedEvents = [...events].sort(
     (a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime()
   );
@@ -38,7 +60,9 @@ export function UpcomingEvents() {
           {sortedEvents.map((event, index) => {
             const effectiveStatus = getEventEffectiveStatus(event);
             const isCompleted = effectiveStatus === 'completed';
-            const isClosed = isEventRegistrationClosed(event);
+            const q = quotas[event.slug];
+            const isClosed = q ? q.isRegistrationClosed : isEventRegistrationClosed(event);
+            const isQuotaFull = q ? q.isQuotaFull : false;
 
             return (
               <motion.div
@@ -74,7 +98,9 @@ export function UpcomingEvents() {
                   >
                     {effectiveStatus === 'upcoming'
                       ? isClosed
-                        ? 'Pendaftaran Ditutup'
+                        ? isQuotaFull
+                          ? 'Kuota Penuh'
+                          : 'Pendaftaran Ditutup'
                         : 'Upcoming'
                       : effectiveStatus === 'ongoing'
                       ? 'Sedang Berlangsung'
@@ -90,7 +116,7 @@ export function UpcomingEvents() {
                     {event.title}
                   </h3>
                   <p className="mt-2 line-clamp-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">{event.description}</p>
-                  <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                  <div className="mt-4 flex flex-wrap items-center gap-2.5 text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 font-medium">
                       <Calendar className="h-3.5 w-3.5 text-emerald-500" />
                       {formatDate(event.eventDate)}
@@ -99,6 +125,12 @@ export function UpcomingEvents() {
                       <MapPin className="h-3.5 w-3.5 text-emerald-500" />
                       {event.location}
                     </span>
+                    {event.maxParticipants && (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20 px-2 py-1 font-semibold">
+                        <Users className="h-3.5 w-3.5 text-teal-500" />
+                        Kuota: {event.maxParticipants} Orang {q?.remainingSlots !== undefined ? `(${q.remainingSlots} sisa)` : ''}
+                      </span>
+                    )}
                   </div>
                   <div className="mt-5 flex items-center justify-between pt-3 border-t border-border/50">
                     <Link
@@ -117,7 +149,7 @@ export function UpcomingEvents() {
                           href={event.regLink}
                           className="rounded-lg bg-muted text-muted-foreground px-3 py-1.5 text-xs font-bold border border-border transition hover:bg-muted/80"
                         >
-                          Ditutup (Cek Tiket)
+                          {isQuotaFull ? 'Kuota Penuh' : 'Ditutup (Cek Tiket)'}
                         </Link>
                       ) : event.regLink.startsWith('http') ? (
                         <a

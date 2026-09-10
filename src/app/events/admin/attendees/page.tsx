@@ -303,8 +303,13 @@ export default function AdminAttendeesPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Pendaftar</span>
               <Users className="h-5 w-5 text-emerald-500" />
             </div>
-            <div className="mt-3 text-3xl font-black text-foreground">{stats.total}</div>
-            <span className="text-[11px] text-muted-foreground">Peserta terdaftar di sistem</span>
+            <div className="mt-3 flex items-baseline gap-2">
+              <span className="text-3xl font-black text-foreground">{stats.total}</span>
+              <span className="text-sm font-semibold text-teal-600 dark:text-teal-400">/ 151 Kuota</span>
+            </div>
+            <span className="text-[11px] text-muted-foreground">
+              {Math.max(0, 151 - stats.total)} slot tersisa sebelum ditutup otomatis
+            </span>
           </div>
 
           <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-5">

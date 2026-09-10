@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { EventsList } from './events-list';
 import { EventCountdown } from '@/components/sections/event-countdown';
 import { JsonLd } from '@/components/shared/json-ld';
-import { events, siteConfig } from '@/lib/content';
+import { events, siteConfig, isEventRegistrationClosed } from '@/lib/content';
+import { getRegistrationCountByEvent } from '@/lib/db';
 
 export const metadata: Metadata = {
   title: 'Kegiatan',
@@ -13,7 +14,19 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default function EventsPage() {
+export default async function EventsPage() {
+  const enrichedEvents = await Promise.all(
+    events.map(async (event) => {
+      const count = await getRegistrationCountByEvent(event.slug);
+      const isClosed = isEventRegistrationClosed(event, count);
+      return {
+        ...event,
+        currentParticipants: count,
+        isRegistrationClosed: isClosed,
+      };
+    })
+  );
+
   return (
     <>
       <JsonLd
@@ -38,7 +51,7 @@ export default function EventsPage() {
 
       <EventCountdown />
 
-      <EventsList events={events} />
+      <EventsList events={enrichedEvents} />
     </>
   );
 }

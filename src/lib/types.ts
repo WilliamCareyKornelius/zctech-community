@@ -14,6 +14,8 @@ export interface Event {
   isRegistrationClosed?: boolean;
   registrationDeadline?: string;
   registrationClosedMessage?: string;
+  maxParticipants?: number;
+  currentParticipants?: number;
   speaker?: string;
   price?: string;
   topics?: string[];

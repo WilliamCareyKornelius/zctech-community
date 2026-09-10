@@ -26,7 +26,15 @@ import type { EventRegistration } from '@/lib/db';
 import { REGISTERED_SCHOOLS } from '@/lib/content';
 import { formatEventFullDateWITA, formatDateTimeWITA } from '@/lib/date';
 
-export function RegisterFormClient({ event }: { event: Event }) {
+export function RegisterFormClient({
+  event,
+  isQuotaFull,
+  currentCount,
+}: {
+  event: Event;
+  isQuotaFull?: boolean;
+  currentCount?: number;
+}) {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -375,13 +383,21 @@ export function RegisterFormClient({ event }: { event: Event }) {
                           <Lock className="h-5 w-5" />
                         </div>
                         <div>
-                          <h3 className="text-base sm:text-lg font-bold">Masa Pendaftaran Telah Berakhir</h3>
-                          <p className="text-xs text-rose-700 dark:text-rose-300">Pendaftaran resmi ditutup pada H-1 kegiatan (Senin, 14 September 2026 pukul 23.59 WITA)</p>
+                          <h3 className="text-base sm:text-lg font-bold">
+                            {isQuotaFull ? 'Kuota Pendaftaran Telah Penuh' : 'Masa Pendaftaran Telah Berakhir'}
+                          </h3>
+                          <p className="text-xs text-rose-700 dark:text-rose-300">
+                            {isQuotaFull
+                              ? `Kapasitas pendaftaran ${event.maxParticipants || 151} peserta telah terpenuhi (${currentCount || event.maxParticipants || 151} / ${event.maxParticipants || 151} terdaftar)`
+                              : 'Pendaftaran resmi ditutup pada H-1 kegiatan (Senin, 14 September 2026 pukul 23.59 WITA)'}
+                          </p>
                         </div>
                       </div>
                       <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground">
                         {event.registrationClosedMessage ||
-                          'Mohon maaf, masa pendaftaran peserta baru untuk kegiatan ini telah resmi ditutup (H-1 sebelum acara). Persiapan data peserta dan registrasi kegiatan sedang difinalisasi oleh panitia.'}
+                          (isQuotaFull
+                            ? `Mohon maaf, kuota pendaftaran untuk kegiatan ini telah terpenuhi (maksimal ${event.maxParticipants || 151} peserta). Pendaftaran resmi telah ditutup oleh panitia.`
+                            : 'Mohon maaf, masa pendaftaran peserta baru untuk kegiatan ini telah resmi ditutup (H-1 sebelum acara). Persiapan data peserta dan registrasi kegiatan sedang difinalisasi oleh panitia.')}
                       </p>
                       <div className="flex items-center gap-2 rounded-xl bg-card/70 p-3 text-xs font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                         <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500" />
@@ -426,16 +442,33 @@ export function RegisterFormClient({ event }: { event: Event }) {
                   </div>
                 ) : (
                   <>
-                    <div className="mb-6">
-                      <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 mb-3">
-                        <Clock className="h-3.5 w-3.5 text-emerald-500" />
-                        <span>Batas Akhir Pendaftaran: <strong>Senin, 14 September 2026 pukul 23.59 WITA</strong> (H-1 Acara)</span>
+                    <div className="mb-6 space-y-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {event.maxParticipants && (
+                          <div className="inline-flex items-center gap-1.5 rounded-xl border border-teal-500/30 bg-teal-500/10 px-3 py-1.5 text-xs font-semibold text-teal-700 dark:text-teal-300">
+                            <span className="inline-block h-2 w-2 rounded-full bg-teal-500 animate-pulse" />
+                            <span>
+                              Kuota: <strong>{event.maxParticipants} Peserta</strong>
+                              {currentCount !== undefined && (
+                                <span className="ml-1 text-teal-600/90 dark:text-teal-400/90">
+                                  ({Math.max(0, event.maxParticipants - currentCount)} slot tersisa)
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        )}
+                        <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                          <Clock className="h-3.5 w-3.5 text-emerald-500" />
+                          <span>Batas Akhir: <strong>Senin, 14 September 2026 pukul 23.59 WITA</strong> (H-1)</span>
+                        </div>
                       </div>
-                      <h2 className="text-xl font-bold text-foreground">Formulir Pendaftaran Peserta</h2>
-                      <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
-                        Isi data diri Anda dengan benar. E-tiket dan bukti pendaftaran resmi akan langsung dikirimkan ke
-                        email yang Anda masukkan.
-                      </p>
+                      <div>
+                        <h2 className="text-xl font-bold text-foreground">Formulir Pendaftaran Peserta</h2>
+                        <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+                          Isi data diri Anda dengan benar. E-tiket dan bukti pendaftaran resmi akan langsung dikirimkan ke
+                          email yang Anda masukkan.
+                        </p>
+                      </div>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-5">

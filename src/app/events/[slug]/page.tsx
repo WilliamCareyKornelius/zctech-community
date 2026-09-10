@@ -5,6 +5,7 @@ import { Calendar, Clock, MapPin, Users } from 'lucide-react';
 import { JsonLd } from '@/components/shared/json-ld';
 import { CopyButton } from '@/components/shared/copy-button';
 import { events, siteConfig, getEventEffectiveStatus, isEventRegistrationClosed } from '@/lib/content';
+import { getRegistrationCountByEvent } from '@/lib/db';
 import { formatEventWithTimeWITA } from '@/lib/date';
 
 type Params = Promise<{ slug: string }>;
@@ -30,7 +31,9 @@ export default async function EventDetailPage({ params }: { params: Params }) {
 
   const effectiveStatus = getEventEffectiveStatus(event);
   const isCompleted = effectiveStatus === 'completed';
-  const isClosed = isEventRegistrationClosed(event);
+  const currentCount = await getRegistrationCountByEvent(event.slug);
+  const isQuotaFull = event.maxParticipants !== undefined && currentCount >= event.maxParticipants;
+  const isClosed = isEventRegistrationClosed(event, currentCount);
 
   const formatDate = (iso: string) => formatEventWithTimeWITA(iso);
 
@@ -85,6 +88,12 @@ export default async function EventDetailPage({ params }: { params: Params }) {
             {event.price && (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold px-3.5 py-1.5">
                 {event.price}
+              </span>
+            )}
+            {event.maxParticipants && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-teal-500/30 bg-teal-500/10 text-teal-600 dark:text-teal-400 font-semibold px-3.5 py-1.5">
+                <Users className="h-4 w-4 text-teal-500" />
+                Kuota: {event.maxParticipants} Peserta
               </span>
             )}
           </div>
@@ -143,18 +152,29 @@ export default async function EventDetailPage({ params }: { params: Params }) {
                 </span>
                 {isClosed && !isCompleted && (
                   <span className="inline-block rounded-full bg-rose-500/20 px-3.5 py-1.5 text-xs font-bold text-rose-600 dark:text-rose-400 border border-rose-500/30">
-                    🔒 Pendaftaran Telah Ditutup (H-1)
+                    {isQuotaFull ? `🔒 Kuota Penuh (${event.maxParticipants} Peserta)` : '🔒 Pendaftaran Telah Ditutup (H-1)'}
                   </span>
                 )}
               </div>
               {isClosed && !isCompleted && (
                 <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
-                  {event.registrationClosedMessage || 'Masa pendaftaran peserta untuk kegiatan ini telah berakhir per Senin malam (H-1 sebelum acara).'}
+                  {isQuotaFull
+                    ? `Pendaftaran peserta untuk kegiatan ini telah ditutup karena kuota maksimal ${event.maxParticipants} peserta telah terpenuhi.`
+                    : event.registrationClosedMessage || 'Masa pendaftaran peserta untuk kegiatan ini telah berakhir per Senin malam (H-1 sebelum acara).'}
                 </p>
               )}
-              {!isClosed && !isCompleted && event.registrationDeadline && (
-                <div className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-emerald-600 dark:text-emerald-400">
-                  <span className="font-bold">⚡ Batas Akhir Pendaftaran:</span> Senin, 14 September 2026 pukul 23.59 WITA (H-1).
+              {!isClosed && !isCompleted && (
+                <div className="mt-3 space-y-2">
+                  {event.maxParticipants && (
+                    <div className="rounded-xl border border-teal-500/20 bg-teal-500/5 p-3 text-xs text-teal-600 dark:text-teal-400">
+                      <span className="font-bold">👥 Kuota Peserta:</span> {event.maxParticipants} Orang ({Math.max(0, event.maxParticipants - currentCount)} slot tersisa).
+                    </div>
+                  )}
+                  {event.registrationDeadline && (
+                    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-emerald-600 dark:text-emerald-400">
+                      <span className="font-bold">⚡ Batas Akhir:</span> Senin, 14 September 2026 pukul 23.59 WITA (H-1).
+                    </div>
+                  )}
                 </div>
               )}
               {isCompleted && (
@@ -177,7 +197,7 @@ export default async function EventDetailPage({ params }: { params: Params }) {
                   href={event.regLink}
                   className="block w-full rounded-xl bg-muted border border-border py-3.5 text-center font-bold text-muted-foreground transition hover:bg-muted/80"
                 >
-                  Masa Pendaftaran Berakhir (Cek E-Tiket)
+                  {isQuotaFull ? 'Kuota Penuh (Cek E-Tiket)' : 'Masa Pendaftaran Berakhir (Cek E-Tiket)'}
                 </Link>
               ) : event.regLink.startsWith('http') ? (
                 <a

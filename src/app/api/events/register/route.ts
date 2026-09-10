@@ -4,6 +4,7 @@ import { events, getEventEffectiveStatus, isEventRegistrationClosed } from '@/li
 import {
   findRegistrationByEmail,
   saveRegistration,
+  getRegistrationCountByEvent,
   type EventRegistration,
 } from '@/lib/db';
 import { sendEventTicketEmail } from '@/lib/mail';
@@ -92,14 +93,17 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 6. Validasi jika pendaftaran ditutup (otomatis H-1, manual, atau acara selesai)
-    if (isEventRegistrationClosed(event)) {
+    // 6. Validasi jika pendaftaran ditutup (otomatis H-1, kuota penuh, manual, atau acara selesai)
+    const currentCount = await getRegistrationCountByEvent(eventSlug);
+    if (isEventRegistrationClosed(event, currentCount)) {
+      const isQuotaFull = event.maxParticipants !== undefined && currentCount >= event.maxParticipants;
+      const closedMsg = isQuotaFull
+        ? `Mohon maaf, kuota pendaftaran untuk kegiatan ini telah terpenuhi (maksimal ${event.maxParticipants} peserta). Pendaftaran resmi telah ditutup.`
+        : event.registrationClosedMessage ||
+          'Masa pendaftaran untuk kegiatan ini telah berakhir atau ditutup oleh panitia.';
+
       return NextResponse.json(
-        {
-          error:
-            event.registrationClosedMessage ||
-            'Masa pendaftaran untuk kegiatan ini telah berakhir atau ditutup oleh panitia.',
-        },
+        { error: closedMsg },
         { status: 400 }
       );
     }
@@ -134,10 +138,22 @@ export async function POST(request: NextRequest) {
       status: 'confirmed',
     };
 
-    // 7. Simpan ke database
-    await saveRegistration(newRegistration);
+    // 8. Simpan ke database dengan proteksi kuota atomic
+    try {
+      await saveRegistration(newRegistration, event.maxParticipants);
+    } catch (saveError: any) {
+      if (saveError?.message === 'KUOTA_PENUH') {
+        return NextResponse.json(
+          {
+            error: `Mohon maaf, kuota pendaftaran telah terpenuhi (maksimal ${event.maxParticipants} peserta). Pendaftaran resmi telah ditutup.`,
+          },
+          { status: 400 }
+        );
+      }
+      throw saveError;
+    }
 
-    // 7. Kirim email bukti pendaftaran Traveloka-style
+    // 9. Kirim email bukti pendaftaran Traveloka-style
     // Menjalankan pengiriman email secara asinkron agar respon cepat
     sendEventTicketEmail(newRegistration).catch((err) =>
       console.error('Background send ticket email error:', err)

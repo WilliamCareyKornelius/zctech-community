@@ -64,6 +64,12 @@ export async function findRegistrationByEmail(
   );
 }
 
+// Hitung total pendaftar terdaftar untuk suatu event
+export async function getRegistrationCountByEvent(eventSlug: string): Promise<number> {
+  const all = await getRegistrations();
+  return all.filter((r) => r.eventSlug.toLowerCase() === eventSlug.toLowerCase()).length;
+}
+
 // Mutex queue untuk menjamin setiap operasi penulisan file berjalan berurutan secara aman (zero race conditions)
 let dbLock = Promise.resolve();
 
@@ -76,8 +82,11 @@ function withDbLock<T>(operation: () => Promise<T>): Promise<T> {
   return next;
 }
 
-// Simpan pendaftaran baru secara aman (atomic write dengan lock)
-export async function saveRegistration(registration: EventRegistration): Promise<EventRegistration> {
+// Simpan pendaftaran baru secara aman (atomic write dengan lock & proteksi kuota)
+export async function saveRegistration(
+  registration: EventRegistration,
+  maxParticipants?: number
+): Promise<EventRegistration> {
   return withDbLock(async () => {
     ensureDbExists();
     const all = await getRegistrations();
@@ -87,6 +96,15 @@ export async function saveRegistration(registration: EventRegistration): Promise
     if (existingIdx >= 0) {
       all[existingIdx] = registration;
     } else {
+      // Proteksi atomic kuota: tolak jika pendaftaran baru telah mencapai batas maksimal
+      if (maxParticipants !== undefined) {
+        const count = all.filter(
+          (r) => r.eventSlug.toLowerCase() === registration.eventSlug.toLowerCase()
+        ).length;
+        if (count >= maxParticipants) {
+          throw new Error('KUOTA_PENUH');
+        }
+      }
       all.unshift(registration);
     }
 

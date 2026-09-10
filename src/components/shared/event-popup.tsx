@@ -10,18 +10,35 @@ import { formatEventFullDateWITA } from '@/lib/date';
 export function EventPopup() {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [quotaData, setQuotaData] = useState<{
+    isQuotaFull: boolean;
+    isRegistrationClosed: boolean;
+    remainingSlots?: number;
+    maxParticipants?: number;
+  } | null>(null);
 
   // Ambil event terdekat yang belum selesai
   const activeEvent = events
     .filter((e) => getEventEffectiveStatus(e) !== 'completed')
     .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())[0];
 
-  const isClosed = activeEvent ? isEventRegistrationClosed(activeEvent) : false;
+  const isClosed = quotaData?.isRegistrationClosed ?? (activeEvent ? isEventRegistrationClosed(activeEvent) : false);
+  const isQuotaFull = quotaData?.isQuotaFull ?? false;
 
   useEffect(() => {
     setMounted(true);
 
     if (!activeEvent) return;
+
+    // Fetch kuota terkini dari server
+    fetch(`/api/events/quota?slug=${activeEvent.slug}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && !data.error) {
+          setQuotaData(data);
+        }
+      })
+      .catch(() => {});
 
     // Cek apakah user sudah pernah melihat/menutup popup event ini
     const storageKey = `zctech_event_popup_seen_${activeEvent.id}`;
@@ -113,7 +130,7 @@ export function EventPopup() {
                 {isClosed ? (
                   <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-rose-500/95 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white shadow-lg backdrop-blur-md">
                     <Sparkles className="h-3 w-3" />
-                    Pendaftaran Ditutup
+                    {isQuotaFull ? 'Kuota Penuh' : 'Pendaftaran Ditutup'}
                   </div>
                 ) : (
                   <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-emerald-500/90 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-black shadow-lg backdrop-blur-md">
@@ -122,11 +139,18 @@ export function EventPopup() {
                   </div>
                 )}
 
-                {activeEvent.price && (
-                  <div className="absolute bottom-3 left-3 rounded-lg bg-black/70 px-2.5 py-1 text-xs font-bold text-emerald-400 border border-emerald-500/40 backdrop-blur-md">
-                    {activeEvent.price}
-                  </div>
-                )}
+                <div className="absolute bottom-3 left-3 flex items-center gap-1.5">
+                  {activeEvent.price && (
+                    <div className="rounded-lg bg-black/70 px-2.5 py-1 text-xs font-bold text-emerald-400 border border-emerald-500/40 backdrop-blur-md">
+                      {activeEvent.price}
+                    </div>
+                  )}
+                  {activeEvent.maxParticipants && (
+                    <div className="rounded-lg bg-black/70 px-2.5 py-1 text-xs font-bold text-teal-300 border border-teal-500/40 backdrop-blur-md">
+                      Kuota: {activeEvent.maxParticipants} Orang
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Title & Tagline */}
@@ -185,7 +209,7 @@ export function EventPopup() {
                       onClick={handleClose}
                       className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-muted border border-border/80 px-5 py-3.5 text-sm font-bold text-muted-foreground transition hover:bg-muted/60 text-center"
                     >
-                      <span>Masa Pendaftaran Berakhir (Cek E-Tiket)</span>
+                      <span>{isQuotaFull ? 'Kuota Penuh (Cek E-Tiket)' : 'Masa Pendaftaran Berakhir (Cek E-Tiket)'}</span>
                       <ArrowRight className="h-4 w-4" />
                     </Link>
                   ) : activeEvent.regLink.startsWith('http') ? (
