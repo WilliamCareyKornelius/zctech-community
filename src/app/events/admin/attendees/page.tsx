@@ -420,7 +420,8 @@ export default function AdminAttendeesPage() {
                           <div className="font-bold text-foreground text-sm">{item.fullName}</div>
                           {item.studentId && (
                             <span className="text-[10px] text-muted-foreground font-mono">
-                              NIM: {item.studentId}
+                              {item.category === 'Pelajar SMA / SMK' ? 'NIS: ' : 'NIM: '}
+                              {item.studentId}
                             </span>
                           )}
                         </td>
