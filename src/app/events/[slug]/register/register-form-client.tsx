@@ -50,6 +50,9 @@ export function RegisterFormClient({
 
   const isPendamping =
     formData.category === 'Guru Pendamping' || formData.category === 'Pendamping';
+  const isMahasiswa = formData.category === 'Mahasiswa';
+  const isUmum = formData.category === 'Umum' || formData.category === 'Umum / Profesional';
+  const isSchoolAttendee = !isMahasiswa && !isUmum;
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -528,11 +531,28 @@ export function RegisterFormClient({
                     <div className="relative">
                       <select
                         value={formData.category}
-                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        onChange={(e) => {
+                          const newCat = e.target.value;
+                          setFormData((prev) => {
+                            let newInst = prev.institution;
+                            if (newCat === 'Siswa' || newCat === 'Guru Pendamping') {
+                              newInst = selectedSchool === 'Lainnya' ? customSchool : selectedSchool;
+                            } else if (prev.category === 'Siswa' || prev.category === 'Guru Pendamping') {
+                              newInst = '';
+                            }
+                            return { ...prev, category: newCat, institution: newInst };
+                          });
+                        }}
                         className="w-full appearance-none rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm font-semibold text-foreground focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition cursor-pointer pr-10"
                       >
                         <option value="Siswa" className="bg-card text-foreground py-2">
                           Siswa (Pelajar SMK / SMA)
+                        </option>
+                        <option value="Mahasiswa" className="bg-card text-foreground py-2">
+                          Mahasiswa (D3 / D4 / S1 Perguruan Tinggi)
+                        </option>
+                        <option value="Umum" className="bg-card text-foreground py-2">
+                          Umum / Profesional
                         </option>
                         <option value="Guru Pendamping" className="bg-card text-foreground py-2">
                           Guru Pendamping (Pembina / Pendamping Sekolah)
@@ -546,16 +566,28 @@ export function RegisterFormClient({
                       <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
                       {isPendamping
                         ? 'Khusus untuk bapak/ibu guru pendamping atau pembina rombongan sekolah.'
+                        : isMahasiswa
+                        ? 'Untuk mahasiswa/mahasiswi dari perguruan tinggi / universitas / politeknik.'
+                        : isUmum
+                        ? 'Untuk praktisi, profesional, antusias IT, dan masyarakat umum.'
                         : 'Untuk perwakilan siswa/siswi sekolah SMK & SMA.'}
                     </p>
                   </div>
 
-                  {/* 5. Asal Sekolah (Drop Box 19 Sekolah) */}
+                  {/* 5. Asal Instansi / Sekolah */}
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-foreground mb-1.5">
                       {isPendamping ? (
                         <>
                           Asal Sekolah / Instansi yang Didampingi <span className="text-red-500">*</span>
+                        </>
+                      ) : isMahasiswa ? (
+                        <>
+                          Asal Universitas / Politeknik / Kampus <span className="text-red-500">*</span>
+                        </>
+                      ) : isUmum ? (
+                        <>
+                          Asal Instansi / Perusahaan / Komunitas <span className="text-red-500">*</span>
                         </>
                       ) : (
                         <>
@@ -563,72 +595,117 @@ export function RegisterFormClient({
                         </>
                       )}
                     </label>
-                    <div className="relative">
-                      <select
-                        required
-                        value={selectedSchool}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setSelectedSchool(val);
-                          if (val !== 'Lainnya') {
-                            setFormData((prev) => ({ ...prev, institution: val }));
-                          } else {
-                            setFormData((prev) => ({ ...prev, institution: customSchool }));
-                          }
-                        }}
-                        className="w-full appearance-none rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm font-semibold text-foreground focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition cursor-pointer pr-10"
-                      >
-                        <option value="" disabled className="bg-card text-muted-foreground">
-                          -- Pilih Asal Sekolah (19 SMK Terdaftar) --
-                        </option>
-                        {REGISTERED_SCHOOLS.map((sch, idx) => (
-                          <option key={sch} value={sch} className="bg-card text-foreground py-2">
-                            {idx + 1}. {sch}
-                          </option>
-                        ))}
-                        <option value="Lainnya" className="bg-card text-foreground py-2">
-                          Lainnya (Sekolah Lain di Luar Daftar)
-                        </option>
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-muted-foreground">
-                        <ChevronDown className="h-4 w-4" />
-                      </div>
-                    </div>
 
-                    {selectedSchool === 'Lainnya' && (
-                      <div className="mt-2.5">
+                    {isSchoolAttendee ? (
+                      <>
+                        <div className="relative">
+                          <select
+                            required
+                            value={selectedSchool}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setSelectedSchool(val);
+                              if (val !== 'Lainnya') {
+                                setFormData((prev) => ({ ...prev, institution: val }));
+                              } else {
+                                setFormData((prev) => ({ ...prev, institution: customSchool }));
+                              }
+                            }}
+                            className="w-full appearance-none rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm font-semibold text-foreground focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition cursor-pointer pr-10"
+                          >
+                            <option value="" disabled className="bg-card text-muted-foreground">
+                              -- Pilih Asal Sekolah (19 SMK Terdaftar) --
+                            </option>
+                            {REGISTERED_SCHOOLS.map((sch, idx) => (
+                              <option key={sch} value={sch} className="bg-card text-foreground py-2">
+                                {idx + 1}. {sch}
+                              </option>
+                            ))}
+                            <option value="Lainnya" className="bg-card text-foreground py-2">
+                              Lainnya (Sekolah Lain di Luar Daftar)
+                            </option>
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-muted-foreground">
+                            <ChevronDown className="h-4 w-4" />
+                          </div>
+                        </div>
+
+                        {selectedSchool === 'Lainnya' && (
+                          <div className="mt-2.5">
+                            <input
+                              type="text"
+                              required
+                              value={customSchool}
+                              onChange={(e) => {
+                                setCustomSchool(e.target.value);
+                                setFormData((prev) => ({ ...prev, institution: e.target.value }));
+                              }}
+                              placeholder={
+                                isPendamping
+                                  ? 'Tuliskan nama sekolah yang didampingi...'
+                                  : 'Tuliskan nama lengkap sekolah asal Anda...'
+                              }
+                              className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition"
+                            />
+                          </div>
+                        )}
+
+                        <p className="mt-1.5 text-[11px] text-muted-foreground flex items-center gap-1.5">
+                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                          <span>
+                            Tersedia 19 SMK terdaftar di Samarinda. Guru pendamping & siswa tinggal memilih tanpa perlu mengetik manual.
+                          </span>
+                        </p>
+                      </>
+                    ) : isMahasiswa ? (
+                      <div>
                         <input
                           type="text"
                           required
-                          value={customSchool}
-                          onChange={(e) => {
-                            setCustomSchool(e.target.value);
-                            setFormData((prev) => ({ ...prev, institution: e.target.value }));
-                          }}
-                          placeholder={
-                            isPendamping
-                              ? 'Tuliskan nama sekolah yang didampingi...'
-                              : 'Tuliskan nama lengkap sekolah asal Anda...'
-                          }
+                          value={formData.institution}
+                          onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
+                          placeholder="Contoh: Universitas Mulawarman, Politani Samarinda, POLNES, UMKT..."
                           className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition"
                         />
+                        <p className="mt-1.5 text-[11px] text-muted-foreground flex items-center gap-1.5">
+                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                          <span>Tuliskan nama kampus / perguruan tinggi tempat Anda menempuh studi.</span>
+                        </p>
+                      </div>
+                    ) : (
+                      <div>
+                        <input
+                          type="text"
+                          required
+                          value={formData.institution}
+                          onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
+                          placeholder="Contoh: PT Telkom, Komunitas IT, Freelancer, Praktisi, atau Umum"
+                          className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition"
+                        />
+                        <p className="mt-1.5 text-[11px] text-muted-foreground flex items-center gap-1.5">
+                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                          <span>Tuliskan instansi, perusahaan, komunitas tempat Anda bernaung, atau isi &apos;Umum&apos;.</span>
+                        </p>
                       </div>
                     )}
-
-                    <p className="mt-1.5 text-[11px] text-muted-foreground flex items-center gap-1.5">
-                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
-                      <span>
-                        Tersedia 19 SMK terdaftar di Samarinda. Guru pendamping & siswa tinggal memilih tanpa perlu mengetik manual.
-                      </span>
-                    </p>
                   </div>
 
-                  {/* 6. Nomor Identitas / NISN / NIP */}
+                  {/* 6. Nomor Identitas / NISN / NIM / NIP */}
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-foreground mb-1.5">
                       {isPendamping ? (
                         <>
                           NIP / NUPTK / No. Identitas Guru{' '}
+                          <span className="text-muted-foreground font-normal">(Opsional)</span>
+                        </>
+                      ) : isMahasiswa ? (
+                        <>
+                          NIM / Program Studi{' '}
+                          <span className="text-muted-foreground font-normal">(Opsional)</span>
+                        </>
+                      ) : isUmum ? (
+                        <>
+                          Profesi / Bidang / No. ID{' '}
                           <span className="text-muted-foreground font-normal">(Opsional)</span>
                         </>
                       ) : (
@@ -645,18 +722,32 @@ export function RegisterFormClient({
                       placeholder={
                         isPendamping
                           ? 'Masukkan NIP atau NUPTK jika berkenan'
+                          : isMahasiswa
+                          ? 'Contoh: 2409106026 / S1 Informatika'
+                          : isUmum
+                          ? 'Contoh: IT Support, Web Developer, Pentester, dll.'
                           : 'Contoh: XII TKJ 1 / 0051234567'
                       }
                       className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition"
                     />
                   </div>
 
-                  {/* 7. Motivasi / Catatan Rombongan */}
+                  {/* 7. Motivasi / Catatan */}
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-foreground mb-1.5">
                       {isPendamping ? (
                         <>
                           Catatan Rombongan / Keterangan Pendamping{' '}
+                          <span className="text-muted-foreground font-normal">(Opsional)</span>
+                        </>
+                      ) : isMahasiswa ? (
+                        <>
+                          Minat / Topik yang Ingin Dipelajari{' '}
+                          <span className="text-muted-foreground font-normal">(Opsional)</span>
+                        </>
+                      ) : isUmum ? (
+                        <>
+                          Tujuan / Ketertarikan Mengikuti Acara{' '}
                           <span className="text-muted-foreground font-normal">(Opsional)</span>
                         </>
                       ) : (
@@ -673,6 +764,10 @@ export function RegisterFormClient({
                       placeholder={
                         isPendamping
                           ? 'Contoh: Membawa rombongan siswa jurusan RPL/TKJ, koordinasi pendamping...'
+                          : isMahasiswa
+                          ? 'Contoh: Tertarik karir cybersecurity, live demo ethical hacking, smart IoT...'
+                          : isUmum
+                          ? 'Contoh: Menambah networking & wawasan seputar keamanan siber industri...'
                           : 'Tuliskan harapan Anda atau pertanyaan yang ingin dibahas saat seminar...'
                       }
                       className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition"

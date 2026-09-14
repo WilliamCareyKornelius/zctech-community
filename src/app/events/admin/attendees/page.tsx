@@ -420,7 +420,13 @@ export default function AdminAttendeesPage() {
                           <div className="font-bold text-foreground text-sm">{item.fullName}</div>
                           {item.studentId && (
                             <span className="text-[10px] text-muted-foreground font-mono">
-                              {item.category === 'Siswa' || item.category === 'Pelajar SMA / SMK' ? 'NIS: ' : 'NIM: '}
+                              {item.category === 'Siswa' || item.category === 'Pelajar SMA / SMK'
+                                ? 'NIS: '
+                                : item.category === 'Mahasiswa'
+                                ? 'NIM: '
+                                : item.category === 'Guru Pendamping'
+                                ? 'NIP: '
+                                : 'ID: '}
                               {item.studentId}
                             </span>
                           )}
