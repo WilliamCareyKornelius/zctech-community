@@ -391,16 +391,16 @@ export function RegisterFormClient({
                           </h3>
                           <p className="text-xs text-rose-700 dark:text-rose-300">
                             {isQuotaFull
-                              ? `Kapasitas pendaftaran ${event.maxParticipants || 151} peserta telah terpenuhi (${currentCount || event.maxParticipants || 151} / ${event.maxParticipants || 151} terdaftar)`
-                              : 'Pendaftaran resmi ditutup pada H-1 kegiatan (Senin, 14 September 2026 pukul 12.00 WITA)'}
+                              ? `Kapasitas pendaftaran ${event.maxParticipants || 120} peserta telah terpenuhi (${currentCount || event.maxParticipants || 120} / ${event.maxParticipants || 120} terdaftar)`
+                              : 'Pendaftaran resmi ditutup pada Selasa, 15 September 2026 pukul 12.00 WITA'}
                           </p>
                         </div>
                       </div>
                       <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground">
                         {event.registrationClosedMessage ||
                           (isQuotaFull
-                            ? `Mohon maaf, kuota pendaftaran untuk kegiatan ini telah terpenuhi (maksimal ${event.maxParticipants || 151} peserta). Pendaftaran resmi telah ditutup oleh panitia.`
-                            : 'Mohon maaf, masa pendaftaran peserta baru untuk kegiatan ini telah resmi ditutup (H-1 sebelum acara). Persiapan data peserta dan registrasi kegiatan sedang difinalisasi oleh panitia.')}
+                            ? `Mohon maaf, kuota pendaftaran untuk kegiatan ini telah terpenuhi (maksimal ${event.maxParticipants || 120} peserta). Pendaftaran resmi telah ditutup oleh panitia.`
+                            : 'Mohon maaf, masa pendaftaran peserta baru untuk kegiatan ini telah resmi ditutup. Persiapan data peserta dan registrasi kegiatan sedang difinalisasi oleh panitia.')}
                       </p>
                       <div className="flex items-center gap-2 rounded-xl bg-card/70 p-3 text-xs font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                         <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500" />
@@ -462,7 +462,7 @@ export function RegisterFormClient({
                         )}
                         <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                           <Clock className="h-3.5 w-3.5 text-emerald-500" />
-                          <span>Batas Akhir: <strong>Senin, 14 September 2026 pukul 12.00 WITA</strong> (H-1)</span>
+                          <span>Batas Akhir: <strong>Selasa, 15 September 2026 pukul 12.00 WITA</strong></span>
                         </div>
                       </div>
                       <div>

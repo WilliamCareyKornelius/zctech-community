@@ -305,10 +305,10 @@ export default function AdminAttendeesPage() {
             </div>
             <div className="mt-3 flex items-baseline gap-2">
               <span className="text-3xl font-black text-foreground">{stats.total}</span>
-              <span className="text-sm font-semibold text-teal-600 dark:text-teal-400">/ 151 Kuota</span>
+              <span className="text-sm font-semibold text-teal-600 dark:text-teal-400">/ 120 Kuota</span>
             </div>
             <span className="text-[11px] text-muted-foreground">
-              {Math.max(0, 151 - stats.total)} slot tersisa sebelum ditutup otomatis
+              {Math.max(0, 120 - stats.total)} slot tersisa sebelum ditutup otomatis
             </span>
           </div>
 

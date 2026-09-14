@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   }
 
   const currentCount = await getRegistrationCountByEvent(event.slug);
-  const maxParticipants = event.maxParticipants ?? 151;
+  const maxParticipants = event.maxParticipants ?? 120;
   const isQuotaFull = currentCount >= maxParticipants;
   const isClosed = isEventRegistrationClosed(event, currentCount);
   const remainingSlots = Math.max(0, maxParticipants - currentCount);

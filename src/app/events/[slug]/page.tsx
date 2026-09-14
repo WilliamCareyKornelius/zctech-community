@@ -172,7 +172,7 @@ export default async function EventDetailPage({ params }: { params: Params }) {
                   )}
                   {event.registrationDeadline && (
                     <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-emerald-600 dark:text-emerald-400">
-                      <span className="font-bold">⚡ Batas Akhir:</span> Senin, 14 September 2026 pukul 12.00 WITA (H-1).
+                      <span className="font-bold">⚡ Batas Akhir:</span> Selasa, 15 September 2026 pukul 12.00 WITA.
                     </div>
                   )}
                 </div>
