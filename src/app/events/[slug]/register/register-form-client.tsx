@@ -389,7 +389,7 @@ export function RegisterFormClient({
                           <p className="text-xs text-rose-700 dark:text-rose-300">
                             {isQuotaFull
                               ? `Kapasitas pendaftaran ${event.maxParticipants || 151} peserta telah terpenuhi (${currentCount || event.maxParticipants || 151} / ${event.maxParticipants || 151} terdaftar)`
-                              : 'Pendaftaran resmi ditutup pada H-1 kegiatan (Senin, 14 September 2026 pukul 23.59 WITA)'}
+                              : 'Pendaftaran resmi ditutup pada H-1 kegiatan (Senin, 14 September 2026 pukul 12.00 WITA)'}
                           </p>
                         </div>
                       </div>
@@ -459,7 +459,7 @@ export function RegisterFormClient({
                         )}
                         <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                           <Clock className="h-3.5 w-3.5 text-emerald-500" />
-                          <span>Batas Akhir: <strong>Senin, 14 September 2026 pukul 23.59 WITA</strong> (H-1)</span>
+                          <span>Batas Akhir: <strong>Senin, 14 September 2026 pukul 12.00 WITA</strong> (H-1)</span>
                         </div>
                       </div>
                       <div>
